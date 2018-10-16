@@ -1,0 +1,71 @@
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/qdev/!svn/ver/156811/360spider/trunk/baselib/third_party/gtest-1.7.0/include/gtest
+END
+gtest-printers.h
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/qdev/!svn/ver/156811/360spider/trunk/baselib/third_party/gtest-1.7.0/include/gtest/gtest-printers.h
+END
+gtest_prod.h
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/qdev/!svn/ver/156811/360spider/trunk/baselib/third_party/gtest-1.7.0/include/gtest/gtest_prod.h
+END
+gtest-spi.h
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/qdev/!svn/ver/156811/360spider/trunk/baselib/third_party/gtest-1.7.0/include/gtest/gtest-spi.h
+END
+gtest-param-test.h
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/qdev/!svn/ver/156811/360spider/trunk/baselib/third_party/gtest-1.7.0/include/gtest/gtest-param-test.h
+END
+gtest-param-test.h.pump
+K 25
+svn:wc:ra_dav:version-url
+V 107
+/qdev/!svn/ver/156811/360spider/trunk/baselib/third_party/gtest-1.7.0/include/gtest/gtest-param-test.h.pump
+END
+gtest_pred_impl.h
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/qdev/!svn/ver/156811/360spider/trunk/baselib/third_party/gtest-1.7.0/include/gtest/gtest_pred_impl.h
+END
+gtest-death-test.h
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/qdev/!svn/ver/156811/360spider/trunk/baselib/third_party/gtest-1.7.0/include/gtest/gtest-death-test.h
+END
+gtest-typed-test.h
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/qdev/!svn/ver/156811/360spider/trunk/baselib/third_party/gtest-1.7.0/include/gtest/gtest-typed-test.h
+END
+gtest.h
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/qdev/!svn/ver/156811/360spider/trunk/baselib/third_party/gtest-1.7.0/include/gtest/gtest.h
+END
+gtest-test-part.h
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/qdev/!svn/ver/156811/360spider/trunk/baselib/third_party/gtest-1.7.0/include/gtest/gtest-test-part.h
+END
+gtest-message.h
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/qdev/!svn/ver/156811/360spider/trunk/baselib/third_party/gtest-1.7.0/include/gtest/gtest-message.h
+END
