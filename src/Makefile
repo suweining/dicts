@@ -27,18 +27,22 @@ LIBS		=	\
 LDFLAGS		= 	$(LIBS) -lboost_thread-mt -lboost_system-mt -Wl,-rpath=../lib -Wl,-rpath=./lib
 
 
-OBJS1		= 	ac_automachine_dict.o  ac_matcher.o util.o log.o main.o
+OBJS1		= 	ac_automachine_dict.o  ac_matcher.o util.o log.o mmap_reader.o main.o
 TARGET1		= 	server
 
-TEST_OBJS1	=	unit/ac_matcher_unit.o
+TEST_OBJS1	=	unit/ac_matcher_unit.o 
 TEST_EXE1	=	unit/ac_matcher_unit
 
-ALL_TEST	=	$(TEST_EXE1)
+TEST_OBJS2	=	mmap_reader.o unit/mmap_reader_unit.o
+TEST_EXE2	=	unit/mmap_reader_unit
+
+
+ALL_TEST	=	$(TEST_EXE1)  $(TEST_EXE2)
 ALL_TARGETS	= 	$(TARGET1) 
 
-test: $(ALL_TEST)
-
 all: $(ALL_TARGETS)
+
+test: $(ALL_TEST)
 
 .cpp.o:
 	$(CPP) $(CPPFLAGS) -c $< -o $@
@@ -50,7 +54,10 @@ $(TEST_EXE1): $(TEST_OBJS1)
 	$(CPP) -o $@ $^ $(LDFLAGS)
 	$(TEST_EXE1)
 
+$(TEST_EXE2): $(TEST_OBJS2)
+	$(CPP) -o $@ $^ $(LDFLAGS)
+	$(TEST_EXE2)
 
 .PHONY: clean
 clean:
-	rm -f src/*.o $(ALL_TARGETS) $(ALL_TEST)
+	rm -f $(HOME)/src/*.o $(HOME)/$(ALL_TARGETS) $(HOME)/$(ALL_TEST)

@@ -107,5 +107,6 @@ int AcAutomachineDict::BuildAcMation(const std::vector<std::string>& words) {
 
 int AcAutomachineDict::Dump() {
 
+
     return 0;
 }

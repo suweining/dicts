@@ -13,8 +13,10 @@ class AcAutomachineDict : public Dict {
         AcAutomachineDict(const std::string& dict_data_path);
         ~AcAutomachineDict();
         int Del(const std::string& key);
+        int Del() {return 0;}
         int Get(const std::string& key, void* value);
         int Set(const std::string& key, const std::string& value = "");
+        int Finalize() {return 0;}
         int Load(const std::string& dict_data_path);
         int Dump();
 
