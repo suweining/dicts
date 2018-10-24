@@ -8,6 +8,9 @@
 #include "re2/set.h"
 #include "darts.h"
 
+#include "thrift/concurrency/Mutex.h"
+
+const std::size_t DFA_MAX_MEM = 2L * 1024L * 1024L * 1024L - 1L;
 
 class PatternDict : IDict {
 
@@ -15,21 +18,64 @@ class PatternDict : IDict {
         PatternDict();
         ~PatternDict();
 
-        int Set(const IKey& key, const IValue& value);
+        int Set(const IKey* key, const IValue* value);
         int Del(const IKey& key);
-        int Get(const IKey& key, IValue* value);
+        int Get(const IKey& key, std::vector<IValue*>* value);
         int Load(const std::string& dict_data_load_path);
         int Dump(const std::string& dict_data_dump_path);
-        int Finalize() = 0;
+        int Finalize();
 
-        int Clear() = 0;
+        int Clear();
 
     private:
+        int Separation();
+        int BuildTrie();
+        int RePrefix(const std::string& re_string, std::string* prefix);
+        int ReLegal(const std::string& re_string);
+    private:
+        class CounterMutex{
+            private:
+                int counter;
+                Mutex counter_mutex;
+            public:
+                CounterMutex() : counter(0){
+
+                }
+                bool UseMutex (){
+                    if (counter > 0){
+                        return true; 
+                    }
+                    return false;
+                }
+                void EntryWrite (){
+                    Guard g(counter_mutex);
+                    ++ counter;
+                    if (counter == 1){ // first writer need wait all reader add mutex
+                        sleep (1); 
+                    }
+                }
+                void ExitWrite(){
+                    Guard g(counter_mutex);      
+                    -- counter;
+                    counter = (counter < 0) ? 0 : counter;
+                }
+        };
+
         typedef struct Node1{
             IKey*       key;
             IValue*     value;
 
             Node1(IKey* k, IValue* v) : key(k), value(v) {}
+            ~Node1() {
+                if(NULL != key){
+                    delete key;
+                    key = NULL;
+                }
+                if(NULL != value) {
+                    delete value;
+                    value = NULL;
+                }
+            }
 
             bool operator == (const Node1& n) {
                 if(n.key->Compare(*key) == 0) {
@@ -56,13 +102,21 @@ class PatternDict : IDict {
             std::vector<RegexInfoMeta>      regex_info_repo; // wait to add into dfa
             std::vector<RegexInfoMeta>      regex_info_online;  // add into dfa successful
             std::vector<RegexInfoMeta>      regex_info_offline; // add into dfa unsuccessful
-            re2::RE2::Set                   dfa;
+            re2::RE2::Set*                  dfa;
             bool operator == (const Node2& n) {
                 return n.prefix == prefix; 
             }
             bool operator == (const std::string& p) {
                 return p == prefix; 
             }
+            bool operator < (const Node2& n)
+                return prefix.compare(n.prefix) < 0;
+            }
+            int Compare(const Node2& n) {
+                return prefix.compare(n.prefix); 
+            }
+            int BuildDfa();
+            int Match(const IKey* key, std::vector<size_t>* indexs);
 
         }PrefixInfoMeta;
 
@@ -78,5 +132,8 @@ class PatternDict : IDict {
         std::vector<DictInfoMeta>           m_dict_info_write;
         std::vector<PrefixInfoMeta>         m_prefix_info_write;
         DartsDatrie*                        m_darts_datrie_write;
+
+        CounterMutex                        m_meta_info_lock_control;
+        ReadWriteMutex                      m_meta_info_mutex;
 };
 #endif
