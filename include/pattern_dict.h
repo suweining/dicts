@@ -10,6 +10,8 @@
 
 #include "thrift/concurrency/Mutex.h"
 
+using namespace apache::thrift::concurrency;
+
 const std::size_t DFA_MAX_MEM = 2L * 1024L * 1024L * 1024L - 1L;
 
 class PatternDict : IDict {
@@ -83,7 +85,7 @@ class PatternDict : IDict {
                 }
                 return false;
             }
-            bool operator == (const Ikey& k) {
+            bool operator == (const IKey& k) {
                 if(k.Compare(*key) == 0) {
                     return true; 
                 }
@@ -109,8 +111,8 @@ class PatternDict : IDict {
             bool operator == (const std::string& p) {
                 return p == prefix; 
             }
-            bool operator < (const Node2& n)
-                return prefix.compare(n.prefix) < 0;
+            bool operator < (const Node2& n) const {
+                return (prefix.compare(n.prefix) < 0);
             }
             int Compare(const Node2& n) {
                 return prefix.compare(n.prefix); 

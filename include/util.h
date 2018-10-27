@@ -1,8 +1,4 @@
 /*
- * util.h
- *
- *  Created on: May 13, 2016
- *      Author: xingdatian
  */
 
 #ifndef INCLUDE_UTIL_H_
@@ -13,7 +9,10 @@
 #include <vector>
 #include <string>
 
-#define FOR_EACH(it_name, container) for (typeof((container).begin()) it_name = (container).begin(), it_name##_end = (container).end(); it_name##_end != it_name; ++it_name)
+#define FOR_EACH(it_name, container) \
+    for (typeof((container).begin()) it_name = (container).begin(), \
+            it_name##_end = (container).end(); \
+            it_name##_end != it_name; ++it_name)
 
 std::string CNEncode(const std::string& str);
 

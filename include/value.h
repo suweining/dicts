@@ -7,7 +7,7 @@ class IValue {
         virtual int Val(void* output) = 0;
         virtual int ToString(void* output) = 0;
         virtual int Compare(const IValue& v) = 0;
-        virtaul int Func(const void* input, viod* output) = 0;
+        virtual int Func(const void* input, void* output) = 0;
         ~IValue() {}
 };
 #endif

@@ -1,30 +1,52 @@
+#include <fstream>
+#include <algorithm>
+#include <set>
+
 #include "pattern_dict.h"
 #include "pattern_dict_key.h"
 #include "pattern_dict_value.h"
+#include "util.h"
 
-PatternDict::PatternDict() {
+PatternDict::PatternDict() : m_darts_datrie_read(NULL), m_darts_datrie_write(NULL) {
 
 }
 
+PatternDict::~PatternDict() {
+    if(NULL != m_darts_datrie_read) {
+        delete m_darts_datrie_read;
+        m_darts_datrie_read = NULL;
+    }
+
+    if(NULL != m_darts_datrie_write) {
+        delete m_darts_datrie_write;
+        m_darts_datrie_write = NULL;
+    }
+}
 int PatternDict::Set(const IKey* key, const IValue* value) {
     std::string re_string;
-    if((int rc = key->Key(&re_string)) && rc != 0) {
+    int rc;
+    if((rc = key->Key(&re_string)) && rc != 0) {
         std::cerr << "key() error:" << rc << std::endl;
         return 1;
     }
 
     // check the re is legal
-    if((int rc = ReLegal(re_string)) && rc != 0) {
+    if((rc = ReLegal(re_string)) && rc != 0) {
         std::cerr << "ReLegal() error:" << rc << std::endl;
         return 2;
     }
 
     // check in m_dict_info or not
-    auto key_itr = EXIST(*key, m_dict_info_write);
-    if(NULL != key_itr) {
+    auto key_itr =  m_dict_info_write.end();
+    FOR_EACH(itr, m_dict_info_write) {
+        if(*itr == *key) {
+            key_itr = itr; 
+        }
+    }
+    if(m_dict_info_write.end() != key_itr) {
         m_dict_info_write.erase(key_itr);
     }
-    m_dict_info_write.push_back(DictInfoMeta(key, value));
+    m_dict_info_write.push_back(DictInfoMeta(const_cast<IKey*>(key), const_cast<IValue*>(value)));
 
     return 0;
 }
@@ -32,11 +54,18 @@ int PatternDict::Set(const IKey* key, const IValue* value) {
 
 int PatternDict::Del(const IKey& key) {
     // check in m_dict_info_write or not
-    auto key_itr = EXIST(key, m_dict_info_write);
-    if(NULL == key_itr) {
-        return 1;
+    auto key_itr =  m_dict_info_write.end();
+    FOR_EACH(itr, m_dict_info_write) {
+        if(*itr == key) {
+            key_itr = itr; 
+        }
     }
-    m_dict_info_write.erase(key_itr);
+    if(m_dict_info_write.end() != key_itr) {
+        m_dict_info_write.erase(key_itr);
+    }
+    else{
+        return 1; 
+    }
     return 0;
 }
 
@@ -44,10 +73,10 @@ int PatternDict::Get(const IKey& key, std::vector<IValue*>* value) {
     std::vector<DartsDatrie::result_pair_type> results;
     size_t result_size = 0;
     std::string keyword;
-    key->Key(&keyword);
+    key.Key(&keyword);
 
     // check trie and get m_prefix_info_read s' index
-    if((result_size = m_darts_datrie_read->commonPrefixSearch(keyword, results)) && result_size == 0) {
+    if((result_size = m_darts_datrie_read->commonPrefixSearch(keyword.c_str(), results)) && result_size == 0) {
         std::cerr << "WARNING: miss darts dict" << std::endl;
         return 1;
     }
@@ -60,7 +89,7 @@ int PatternDict::Get(const IKey& key, std::vector<IValue*>* value) {
     // get hit_prefix_info by hit_index
     std::vector<PrefixInfoMeta> hit_prefix_info;
     for(size_t i = 0; i < result_size; ++i) {
-        size_t index = static_cast<size_t>(results[i]);
+        size_t index = static_cast<size_t>(results[i].value);
         hit_prefix_info.push_back(m_prefix_info_read[index]);
     }
 
@@ -101,7 +130,7 @@ int PatternDict::Load(const std::string& dict_data_load_path) {
         m_prefix_info_write.swap(t_prefix_info_write);
     }
     // read file
-    std::ifstream in_stream(dict_data_load_path);
+    std::ifstream in_stream(dict_data_load_path.c_str(), std::ifstream::in);
     if(!in_stream.is_open()) {
         std::cerr << "error to open input file:" << dict_data_load_path << std::endl; 
         return 1;
@@ -128,7 +157,7 @@ int PatternDict::Load(const std::string& dict_data_load_path) {
 }
 
 int PatternDict::Dump(const std::string& dict_data_dump_path) {
-    std::ofstream out_stream(dict_data_dump_path);
+    std::ofstream out_stream(dict_data_dump_path, std::ifstream::out);
     if(out_stream.is_open()) {
         std::cerr << "error to open dump file:" << dict_data_dump_path << std::endl;
         return 1;
@@ -148,19 +177,26 @@ int PatternDict::Finalize() {
     size_t dict_info_len = m_dict_info_write.size();
     for(size_t i = 0; i < dict_info_len; ++i) {
         std::string re_string;
-        dict_info_itr->key->Key(&re_string);
+        m_dict_info_write[i].key->Key(&re_string);
+
         PrefixInfoMeta prefix_info;
-        if((int rc = RePrefix(re_string, &(prefix_info.prefix)) && rc != 0) {
+        int rc = 0;
+        if((rc = RePrefix(re_string, &(prefix_info.prefix))) && rc != 0) {
             std::cerr << "RePrefix() error:" << rc << std::endl;
             continue;
         }
 
         RegexInfoMeta regex_info_meta;
         regex_info_meta.regex   = re_string;
-        regex_info_meta.index   = i; 
+        regex_info_meta.index   = i;
 
-        auto prefix_info_itr = EXIST(prefix_info, m_prefix_info_write);
-        if(NULL == prefix_info_itr) {
+        typeof(m_prefix_info_write.begin()) prefix_info_itr;
+        FOR_EACH(itr, m_prefix_info_write) {
+            if(itr->prefix == regex_info_meta.regex) {
+                prefix_info_itr= itr;
+            }
+        }
+        if(m_prefix_info_write.end() == prefix_info_itr) {
             // not exist in m_prefix_info_write
             prefix_info.regex_info_repo.push_back(regex_info_meta);
             m_prefix_info_write.push_back(prefix_info);
@@ -172,7 +208,8 @@ int PatternDict::Finalize() {
     }
 
     // build trie
-    if((int rc = BuildTrie()) && rc != 0) {
+    int rc = 0;
+    if((rc = BuildTrie()) && rc != 0) {
         std::cerr << "BuildTrie() error:" << rc << std::endl;
         return 1;
     }
@@ -184,14 +221,25 @@ int PatternDict::Finalize() {
     Separation();
     return 0;
 }
+int PatternDict::Clear() {
+    if(m_dict_info_write.size() > 0) {
+        std::vector<DictInfoMeta>   t_dict_info_write;
+        m_dict_info_write.swap(t_dict_info_write);
+    }
 
+    if(m_prefix_info_write.size() > 0) {
+        std::vector<PrefixInfoMeta> t_prefix_info_write;
+        m_prefix_info_write.swap(t_prefix_info_write);
+    }
+    return 0;
+}
 int PatternDict::Separation() {
     if(NULL == m_darts_datrie_write) {
         return 1;
     }
     m_meta_info_lock_control.EntryWrite();
     {
-        Guard g(m_meta_info_mutex, true);
+        RWGuard g(m_meta_info_mutex, true);
         m_dict_info_read.swap(m_dict_info_write);
         m_prefix_info_read.swap(m_prefix_info_write);
 
@@ -208,8 +256,8 @@ int PatternDict::Separation() {
     m_dict_info_write.swap(t_dict_info_write);
     m_prefix_info_write.swap(t_prefix_info_write);
 
-    m_dict_info_write.insert(m_dict_info_read.begin(), m_dict_info_read.end());
-    m_prefix_info_write.insert(m_prefix_info_read.begin(), m_prefix_info_read.end());
+    m_dict_info_write.insert(m_dict_info_write.begin(), m_dict_info_read.begin(), m_dict_info_read.end());
+    m_prefix_info_write.insert(m_prefix_info_write.begin(), m_prefix_info_read.begin(), m_prefix_info_read.end());
 
     delete m_darts_datrie_write;
     m_darts_datrie_write = NULL;
@@ -228,22 +276,22 @@ int PatternDict::BuildTrie() {
     // 2. prepare keys, lengths, values
     for(size_t i = 0; i < prefix_info_write_len; ++i) {
         std::string prefix = m_prefix_info_write[i].prefix;
-        keys.push_back(prefix);
+        keys.push_back(prefix.c_str());
         lengths.push_back(prefix.length());
         values.push_back(static_cast<DartsDatrie::value_type>(i));
     }
     // 3. build darts
     try {
-        if((int rc = m_darts_datrie_write.build(
+        int rc = 0;
+        if((rc = m_darts_datrie_write->build(
                         prefix_info_write_len,
-                        keys,
-                        lengths,
-                        values)) && rc != 0) {
+                        &keys[0],
+                        &lengths[0],
+                        &values[0])) && rc != 0) {
             std::cerr << "m_darts_datrie_write.build error" << std::endl;
             return 1;
         }
-    }
-    catch(const std::exception &ex) {
+    }catch(const std::exception &ex) {
         std::cerr << "exception: " << ex.what() << std::endl;  
         return 2;
     }
@@ -251,7 +299,42 @@ int PatternDict::BuildTrie() {
 }
 
 int PatternDict::RePrefix(const std::string& re_string, std::string* prefix) {
-    *prefix = re_string;
+    std::string spec_sym = "\\";
+    std::string spec_sym_arr[] = {"\\", "$", "(", "*", "+", ".", "[", "?", "^", "{", "|"};
+    size_t size = (size_t)(sizeof(spec_sym_arr)/ sizeof(spec_sym_arr[0]) );
+    std::set<std::string> spec_sym_set(spec_sym_arr, spec_sym_arr + size);
+
+    size_t min_pos = -1;
+
+    // 1. check spec_sym
+    size_t hit_pos = 0;
+    while((hit_pos = re_string.find(spec_sym, hit_pos)) && hit_pos != std::string::npos) {
+        if(hit_pos + 1 == std::string::npos) {
+            break; 
+        }
+        std::string next_ch(1, re_string[hit_pos + 1]);
+        if(spec_sym_set.count(next_ch) != 0) {
+            min_pos = min_pos > hit_pos ? hit_pos : min_pos;
+            break; 
+        }
+    }
+
+    // 2. check spec_sys_arr
+    for(size_t i = 0; i < size; ++i) {
+        spec_sym = spec_sym_arr[i]; 
+        hit_pos = 0;
+        while((hit_pos = re_string.find(spec_sym, hit_pos)) && hit_pos != std::string::npos) {
+            if(hit_pos - 1 < 0) {
+                continue; 
+            }
+            std::string pre_ch(1, re_string[hit_pos]);
+            if(pre_ch != "\\") {
+                min_pos = min_pos > hit_pos ? hit_pos : min_pos;
+                break; 
+            }
+        }
+    }
+    *prefix = re_string.substr(0, min_pos);
     return 0;
 }
 
@@ -265,16 +348,17 @@ int PatternDict::PrefixInfoMeta::BuildDfa() {
     // 1. init dfa_opt
     re2::RE2::Options dfa_opt;
     dfa_opt.set_case_sensitive(false);
-    dfa_opt.set_never_capture(true); 
+    dfa_opt.set_never_capture(true);
     dfa_opt.set_max_mem(DFA_MAX_MEM);
 
     // 2. init dfa
     dfa =  new re2::RE2::Set(dfa_opt, RE2::ANCHOR_START);
     size_t regex_info_repo_len = regex_info_repo.size();
     for(size_t i = 0; i < regex_info_repo_len; +i) {
+        int rc = 0;
         std::string regex = regex_info_repo[i].regex;
         re2::StringPiece sp(regex.c_str(), regex.size());
-        if((int rc = dfa->Add(sp, NULL)) && rc == -1) {
+        if((rc = dfa->Add(sp, NULL)) && rc == -1) {
             std::cerr << "warning:" << regex << "\tadd into set fail" << std::endl;
             regex_info_offline.push_back(regex_info_repo[i]);
         }
