@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/qdev/!svn/ver/189795/360spider/trunk/plat/pattern-filter/third_party/re2/include/re2
+END
+set.h
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/qdev/!svn/ver/189795/360spider/trunk/plat/pattern-filter/third_party/re2/include/re2/set.h
+END
+stringpiece.h
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/qdev/!svn/ver/189795/360spider/trunk/plat/pattern-filter/third_party/re2/include/re2/stringpiece.h
+END
+filtered_re2.h
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/qdev/!svn/ver/189795/360spider/trunk/plat/pattern-filter/third_party/re2/include/re2/filtered_re2.h
+END
+variadic_function.h
+K 25
+svn:wc:ra_dav:version-url
+V 105
+/qdev/!svn/ver/189795/360spider/trunk/plat/pattern-filter/third_party/re2/include/re2/variadic_function.h
+END
+re2.h
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/qdev/!svn/ver/189795/360spider/trunk/plat/pattern-filter/third_party/re2/include/re2/re2.h
+END

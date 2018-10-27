@@ -1,0 +1,17 @@
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/qdev/!svn/ver/189795/360spider/trunk/plat/pattern-filter/third_party/thrift-0.9.1/include/thrift/qt
+END
+TQIODeviceTransport.h
+K 25
+svn:wc:ra_dav:version-url
+V 122
+/qdev/!svn/ver/189795/360spider/trunk/plat/pattern-filter/third_party/thrift-0.9.1/include/thrift/qt/TQIODeviceTransport.h
+END
+TQTcpServer.h
+K 25
+svn:wc:ra_dav:version-url
+V 114
+/qdev/!svn/ver/189795/360spider/trunk/plat/pattern-filter/third_party/thrift-0.9.1/include/thrift/qt/TQTcpServer.h
+END

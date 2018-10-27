@@ -1,0 +1,47 @@
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/qdev/!svn/ver/189795/360spider/trunk/plat/pattern-filter/third_party/thrift-0.9.1/include/thrift/async
+END
+TAsyncChannel.h
+K 25
+svn:wc:ra_dav:version-url
+V 119
+/qdev/!svn/ver/189795/360spider/trunk/plat/pattern-filter/third_party/thrift-0.9.1/include/thrift/async/TAsyncChannel.h
+END
+TAsyncBufferProcessor.h
+K 25
+svn:wc:ra_dav:version-url
+V 127
+/qdev/!svn/ver/189795/360spider/trunk/plat/pattern-filter/third_party/thrift-0.9.1/include/thrift/async/TAsyncBufferProcessor.h
+END
+TAsyncDispatchProcessor.h
+K 25
+svn:wc:ra_dav:version-url
+V 129
+/qdev/!svn/ver/189795/360spider/trunk/plat/pattern-filter/third_party/thrift-0.9.1/include/thrift/async/TAsyncDispatchProcessor.h
+END
+TAsyncProcessor.h
+K 25
+svn:wc:ra_dav:version-url
+V 121
+/qdev/!svn/ver/189795/360spider/trunk/plat/pattern-filter/third_party/thrift-0.9.1/include/thrift/async/TAsyncProcessor.h
+END
+TAsyncProtocolProcessor.h
+K 25
+svn:wc:ra_dav:version-url
+V 129
+/qdev/!svn/ver/189795/360spider/trunk/plat/pattern-filter/third_party/thrift-0.9.1/include/thrift/async/TAsyncProtocolProcessor.h
+END
+TEvhttpServer.h
+K 25
+svn:wc:ra_dav:version-url
+V 119
+/qdev/!svn/ver/189795/360spider/trunk/plat/pattern-filter/third_party/thrift-0.9.1/include/thrift/async/TEvhttpServer.h
+END
+TEvhttpClientChannel.h
+K 25
+svn:wc:ra_dav:version-url
+V 126
+/qdev/!svn/ver/189795/360spider/trunk/plat/pattern-filter/third_party/thrift-0.9.1/include/thrift/async/TEvhttpClientChannel.h
+END

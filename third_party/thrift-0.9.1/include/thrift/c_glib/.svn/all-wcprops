@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/qdev/!svn/ver/189795/360spider/trunk/plat/pattern-filter/third_party/thrift-0.9.1/include/thrift/c_glib
+END
+thrift.h
+K 25
+svn:wc:ra_dav:version-url
+V 113
+/qdev/!svn/ver/189795/360spider/trunk/plat/pattern-filter/third_party/thrift-0.9.1/include/thrift/c_glib/thrift.h
+END
+thrift_application_exception.h
+K 25
+svn:wc:ra_dav:version-url
+V 135
+/qdev/!svn/ver/189795/360spider/trunk/plat/pattern-filter/third_party/thrift-0.9.1/include/thrift/c_glib/thrift_application_exception.h
+END
+thrift_struct.h
+K 25
+svn:wc:ra_dav:version-url
+V 120
+/qdev/!svn/ver/189795/360spider/trunk/plat/pattern-filter/third_party/thrift-0.9.1/include/thrift/c_glib/thrift_struct.h
+END
+config.h
+K 25
+svn:wc:ra_dav:version-url
+V 113
+/qdev/!svn/ver/189795/360spider/trunk/plat/pattern-filter/third_party/thrift-0.9.1/include/thrift/c_glib/config.h
+END

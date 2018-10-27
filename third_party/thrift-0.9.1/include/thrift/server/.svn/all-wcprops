@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/qdev/!svn/ver/189795/360spider/trunk/plat/pattern-filter/third_party/thrift-0.9.1/include/thrift/server
+END
+TServer.h
+K 25
+svn:wc:ra_dav:version-url
+V 114
+/qdev/!svn/ver/189795/360spider/trunk/plat/pattern-filter/third_party/thrift-0.9.1/include/thrift/server/TServer.h
+END
+TThreadedServer.h
+K 25
+svn:wc:ra_dav:version-url
+V 122
+/qdev/!svn/ver/189795/360spider/trunk/plat/pattern-filter/third_party/thrift-0.9.1/include/thrift/server/TThreadedServer.h
+END
+TThreadPoolServer.h
+K 25
+svn:wc:ra_dav:version-url
+V 124
+/qdev/!svn/ver/189795/360spider/trunk/plat/pattern-filter/third_party/thrift-0.9.1/include/thrift/server/TThreadPoolServer.h
+END
+TNonblockingServer.h
+K 25
+svn:wc:ra_dav:version-url
+V 125
+/qdev/!svn/ver/189795/360spider/trunk/plat/pattern-filter/third_party/thrift-0.9.1/include/thrift/server/TNonblockingServer.h
+END
+TSimpleServer.h
+K 25
+svn:wc:ra_dav:version-url
+V 120
+/qdev/!svn/ver/189795/360spider/trunk/plat/pattern-filter/third_party/thrift-0.9.1/include/thrift/server/TSimpleServer.h
+END

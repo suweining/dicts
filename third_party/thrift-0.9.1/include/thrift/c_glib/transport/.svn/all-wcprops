@@ -1,0 +1,53 @@
+K 25
+svn:wc:ra_dav:version-url
+V 114
+/qdev/!svn/ver/189795/360spider/trunk/plat/pattern-filter/third_party/thrift-0.9.1/include/thrift/c_glib/transport
+END
+thrift_framed_transport.h
+K 25
+svn:wc:ra_dav:version-url
+V 140
+/qdev/!svn/ver/189795/360spider/trunk/plat/pattern-filter/third_party/thrift-0.9.1/include/thrift/c_glib/transport/thrift_framed_transport.h
+END
+thrift_transport.h
+K 25
+svn:wc:ra_dav:version-url
+V 133
+/qdev/!svn/ver/189795/360spider/trunk/plat/pattern-filter/third_party/thrift-0.9.1/include/thrift/c_glib/transport/thrift_transport.h
+END
+thrift_buffered_transport.h
+K 25
+svn:wc:ra_dav:version-url
+V 142
+/qdev/!svn/ver/189795/360spider/trunk/plat/pattern-filter/third_party/thrift-0.9.1/include/thrift/c_glib/transport/thrift_buffered_transport.h
+END
+thrift_server_socket.h
+K 25
+svn:wc:ra_dav:version-url
+V 137
+/qdev/!svn/ver/189795/360spider/trunk/plat/pattern-filter/third_party/thrift-0.9.1/include/thrift/c_glib/transport/thrift_server_socket.h
+END
+thrift_memory_buffer.h
+K 25
+svn:wc:ra_dav:version-url
+V 137
+/qdev/!svn/ver/189795/360spider/trunk/plat/pattern-filter/third_party/thrift-0.9.1/include/thrift/c_glib/transport/thrift_memory_buffer.h
+END
+thrift_server_transport.h
+K 25
+svn:wc:ra_dav:version-url
+V 140
+/qdev/!svn/ver/189795/360spider/trunk/plat/pattern-filter/third_party/thrift-0.9.1/include/thrift/c_glib/transport/thrift_server_transport.h
+END
+thrift_transport_factory.h
+K 25
+svn:wc:ra_dav:version-url
+V 141
+/qdev/!svn/ver/189795/360spider/trunk/plat/pattern-filter/third_party/thrift-0.9.1/include/thrift/c_glib/transport/thrift_transport_factory.h
+END
+thrift_socket.h
+K 25
+svn:wc:ra_dav:version-url
+V 130
+/qdev/!svn/ver/189795/360spider/trunk/plat/pattern-filter/third_party/thrift-0.9.1/include/thrift/c_glib/transport/thrift_socket.h
+END
