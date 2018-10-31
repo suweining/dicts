@@ -137,6 +137,7 @@ int PatternDict::Load(const std::string& dict_data_load_path) {
     }
     std::string line;
     while(in_stream >> line) {
+        // TODO: class_key, class_value should come from config 
         IKey* key = new PatternDictKey(line);
         IValue* value = new PatternDictValue(line);
 

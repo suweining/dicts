@@ -1,0 +1,24 @@
+#ifndef __DICTS_PATTERN_DICT_STRUCT_VALUE__
+#define __DICTS_PATTERN_DICT_STRUCT_VALUE__
+
+#include <map> 
+
+class PatternDictStructValue : public IValue {
+    
+    public:
+        PatternDictStructValue();
+        ~PatternDictStructValue();
+
+        int Init(const void* input);
+        int Val(void* output);
+        int ToString(void* output);
+        int Compare(const IValue& v);
+        int Func(const void* input, void* output);
+
+    private:
+        std::string                         m_value; // json
+        std::string                         m_string;
+        std::map<std::string, std::string>  m_fields;
+        
+};
+#endif
