@@ -1,6 +1,7 @@
 #include "pattern_dict_struct_value.h"
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h" 
+#include "util.h"
 
 PatternDictStructValue::PatternDictStructValue() {
 
@@ -11,9 +12,9 @@ PatternDictStructValue::~PatternDictStructValue() {
 }
 
 int PatternDictStructValue::Init(const void* input) {
-    std::string input_str = const_cast<string>(*(string*)input);
+    std::string* input_str = const_cast<std::string*>((std::string*)input);
     // init m_fields
-    std::vector<std::string> parts = StringToTokens(input_str, false, ' ');
+    std::vector<std::string> parts = StringToTokens(*input_str, false, ' ');
     FOR_EACH(parts_itr, parts) {
         std::vector<std::string> fields = StringToTokens(*parts_itr, false, ':', true);
         m_fields[ fields[0] ] = fields[1];
@@ -24,8 +25,8 @@ int PatternDictStructValue::Init(const void* input) {
 
     writer.StartObject();
     FOR_EACH(fields_itr, m_fields) {
-        writer.String(fields_itr->first);
-        writer.String(fields_itr->second);
+        writer.String((fields_itr->first).c_str());
+        writer.String((fields_itr->second).c_str());
     }
     writer.EndObject();
 
@@ -34,7 +35,7 @@ int PatternDictStructValue::Init(const void* input) {
     FOR_EACH(fields_itr, m_fields) {
         m_string += fields_itr->first + ":" + fields_itr->second;
     }
-    
+
     return 0;
 }
 
@@ -47,6 +48,10 @@ int PatternDictStructValue::ToString(void* output) {
     return 0;
 }
 
-int PatternDictStructValue::Func(const viod* input, void* output) {
+int PatternDictStructValue::Func(const void* input, void* output) {
+    return 0;
+}
+
+int PatternDictStructValue::Compare(const IValue& v) {
     return 0;
 }

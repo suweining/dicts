@@ -14,6 +14,7 @@ LIB_GTEST	=	$(THIRD_PARTY)/gtest-1.7.0
 LIB_AHOCORASICK	= 	$(THIRD_PARTY)/ahocorasick
 LIB_RE		=	$(THIRD_PARTY)/re2
 LIB_THRIFT	=	$(THIRD_PARTY)/thrift-0.9.1/
+LIB_RAPIDJSON	=	$(THIRD_PARTY)/rapidjson/
 
 
 INCLUDE		=	\
@@ -22,6 +23,7 @@ INCLUDE		=	\
 			-I$(LIB_GTEST)/include \
 			-I$(LIB_RE)/include \
 			-I$(LIB_THRIFT)/include \
+			-I$(LIB_RAPIDJSON)/include \
 
 LIBS		=	\
 			-L$(HOME)/lib \
@@ -30,11 +32,13 @@ LIBS		=	\
 			$(LIB_GTEST)/lib/libgtest.a \
 			$(LIB_THRIFT)/lib/libthrift.a \
 			$(LIB_THRIFT)/lib/libthriftnb.a \
+			$(LIB_RAPIDJSON)/lib4c/librapidjson.a \
+
 
 LDFLAGS		= 	$(LIBS) -lboost_thread-mt -lboost_system-mt -lre2 -Wl,-rpath=../lib -Wl,-rpath=./lib
 
 
-OBJS1		= 	ac_automachine_dict.o  ac_matcher.o util.o log.o mmap_reader.o  pattern_dict.o main.o
+OBJS1		= 	ac_automachine_dict.o  ac_matcher.o util.o log.o mmap_reader.o  pattern_dict.o pattern_dict_struct_key.o pattern_dict_struct_value.o main.o
 TARGET1		= 	server
 
 TEST_OBJS1	=	unit/ac_matcher_unit.o 

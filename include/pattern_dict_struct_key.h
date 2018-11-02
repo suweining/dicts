@@ -1,7 +1,9 @@
 #ifndef __DICTS_PATTERN_DICT_STRUCT_KEY__
 #define __DICTS_PATTERN_DICT_STRUCT_KEY__
 
+#include <string>
 #include "key.h"
+
 
 class PatternDictStructKey : public IKey {
 

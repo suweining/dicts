@@ -1,3 +1,4 @@
+#include <iostream>
 #include "pattern_dict_struct_key.h"
 #include "util.h"
 
@@ -10,11 +11,11 @@ PatternDictStructKey::~PatternDictStructKey() {
 }
 
 int PatternDictStructKey::Init(const void* input) {
-    std::string input_str = const_cast<string>(*(string*)input);
+    std::string* input_str = const_cast<std::string*>((std::string*)input);
 
     // get pattern field
     std::string pattern_field;
-    std::vector<std::string> fields = StringToTokens(input_str, false, ' ');
+    std::vector<std::string> fields = StringToTokens(*input_str, false, ' ');
     FOR_EACH(field_itr, fields) {
         size_t pos = field_itr->find("pattern:");
         if(pos == 0) {
@@ -22,12 +23,12 @@ int PatternDictStructKey::Init(const void* input) {
             break;
         }
     }
-    std::string pattern = (StringToTokens(pattern_field, false, ':'))[1]
+    std::string pattern = (StringToTokens(pattern_field, false, ':'))[1];
     // TODO: check pattern's syntax
     m_string = pattern;
 
     // get host
-    std::string url_parts = StringToTokens(pattern, false, '/');
+    std::vector<std::string> url_parts = StringToTokens(pattern, false, '/');
     size_t url_parts_len = url_parts.size();
     if(url_parts_len < 2) {
         std::cerr << "pattern error" << std::endl;
@@ -49,7 +50,7 @@ int PatternDictStructKey::Init(const void* input) {
     }
 
     // reversal host
-    std::string host_parts = StringToTokens(host, false, '.');
+    std::vector<std::string> host_parts = StringToTokens(host, false, '.');
     size_t host_parts_len = host_parts.size();
     std::string reversal_host;
     for(size_t i = host_parts_len - 1; i > 0; --i) {
@@ -96,13 +97,13 @@ int PatternDictStructKey::ToString(void* output) const {
 }
 
 int PatternDictStructKey::Compare(const IKey& key) const {
-    std::string key;
+    std::string key_str;
 
-    if(key->Key(&key)) {
-        cerr << "get key str error" << std::endl;
+    if(key.Key(&key_str)) {
+        std::cerr << "get key str error" << std::endl;
     }
 
-    return m_key.compare(key);
+    return m_key.compare(key_str);
 }
 
 int PatternDictStructKey::Func(const void* input, void* output) {

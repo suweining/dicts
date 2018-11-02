@@ -2,9 +2,13 @@
 #define __DICTS_PATTERN_DICT_STRUCT_VALUE__
 
 #include <map> 
+#include <string>
+#include <vector>
+
+#include "value.h"
 
 class PatternDictStructValue : public IValue {
-    
+
     public:
         PatternDictStructValue();
         ~PatternDictStructValue();
@@ -19,6 +23,6 @@ class PatternDictStructValue : public IValue {
         std::string                         m_value; // json
         std::string                         m_string;
         std::map<std::string, std::string>  m_fields;
-        
+
 };
 #endif
