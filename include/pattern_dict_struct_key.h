@@ -12,7 +12,8 @@ class PatternDictStructKey : public IKey {
         ~PatternDictStructKey();
 
         int Init(const void* input);
-        int Key(void* output) const;
+        int SetKey(const void* input);
+        int GetKey(void* output) const;
         int ToString(void* output) const;
         int Compare(const IKey& key) const;
         int Func(const void* input, void* output);

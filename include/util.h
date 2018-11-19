@@ -22,6 +22,8 @@ bool IsUtf8(const std::string& src);
 
 const std::vector<std::string> StringToTokens(const std::string& content, bool reserve_empty_token, char delim, bool only_the_first = false);
 
+const std::vector<std::string> StringToTokens2(const std::string& content, bool reserve_empty_token, const char* delim, bool only_the_first = false);
+
 void StringReplace(std::string& content, const std::string& src, const std::string& dst);
 
 void StringReplace(std::string& content, const char src, const char dst);

@@ -2,9 +2,18 @@
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h" 
 #include "util.h"
+#include "log.h"
 
 PatternDictStructValue::PatternDictStructValue() {
 
+}
+
+PatternDictStructValue::PatternDictStructValue(const std::string& line) {
+    if(line.size() > 0) {
+        Init(&line);
+    }
+
+    log(LOG_DEBUG, "%s:%d\ttid:%lld\tclass:PatternDictStrucValue\tfunction:PatternDictStructValue\tinfo:m_value %s", __FILE__, __LINE__, pthread_self(), m_value.c_str());
 }
 
 PatternDictStructValue::~PatternDictStructValue() {
@@ -13,8 +22,11 @@ PatternDictStructValue::~PatternDictStructValue() {
 
 int PatternDictStructValue::Init(const void* input) {
     std::string* input_str = const_cast<std::string*>((std::string*)input);
+    if(NULL == input_str || input_str->size() == 0) {
+        return 1; 
+    }
     // init m_fields
-    std::vector<std::string> parts = StringToTokens(*input_str, false, ' ');
+    std::vector<std::string> parts = StringToTokens(*input_str, false, '\t');
     FOR_EACH(parts_itr, parts) {
         std::vector<std::string> fields = StringToTokens(*parts_itr, false, ':', true);
         m_fields[ fields[0] ] = fields[1];
@@ -33,18 +45,23 @@ int PatternDictStructValue::Init(const void* input) {
     m_value = str_buf.GetString();
     // TODO: get m_string
     FOR_EACH(fields_itr, m_fields) {
-        m_string += fields_itr->first + ":" + fields_itr->second;
+        m_string += fields_itr->first + ":" + fields_itr->second + "\t";
     }
-
     return 0;
 }
 
 int PatternDictStructValue::Val(void* output) {
-    if(m_value.size())
+    if(0 != m_value.size()) {
+        * (std::string*) output = m_value; 
+    }
     return 0;
 }
 
 int PatternDictStructValue::ToString(void* output) {
+
+    if(0 != m_string.size()) {
+        * (std::string*) output = m_string; 
+    }
     return 0;
 }
 

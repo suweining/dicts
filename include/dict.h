@@ -22,7 +22,7 @@ class IDict {
     public:
         virtual int Set(const IKey& key, const IValue& value) = 0;
         virtual int Del(const IKey& key) = 0;
-        virtual int Get(const IKey& key, IValue* value) = 0;
+        virtual int Get(const IKey& key, std::vector<IValue*>* value) = 0;
         virtual int Load(const std::string& dict_data_load_path) = 0;
         virtual int Dump(const std::string& dict_data_dump_path) = 0;
         virtual int Finalize() = 0;

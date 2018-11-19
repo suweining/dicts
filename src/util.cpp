@@ -178,6 +178,30 @@ const vector<string> StringToTokens(const string& content, bool reserve_empty_to
     return tokens;
 }
 
+const vector<string> StringToTokens2(const string& content, bool reserve_empty_token, const char* delim, bool only_the_first) {
+    size_t delim_len = strlen(delim);
+    vector<string> tokens;
+    const char* start = content.c_str();
+    const char* end = start + content.size();
+    const char* n = NULL;
+    bool check_first = false;
+
+    while (NULL != (n = strstr(start, delim)) && start < end && !check_first) {
+        if (reserve_empty_token || n != start) {
+            tokens.push_back(string(start, n - start));
+        }
+
+        start = n + delim_len;
+        check_first = only_the_first;
+    }
+
+    if (*start || (reserve_empty_token && strcmp(delim, start) == 0)) {
+        tokens.push_back(start);
+    }
+
+    return tokens;
+}
+
 unsigned char ToHex(unsigned char x) {
     unsigned char y = '0';
 

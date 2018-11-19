@@ -14,13 +14,17 @@ using namespace apache::thrift::concurrency;
 
 const std::size_t DFA_MAX_MEM = 2L * 1024L * 1024L * 1024L - 1L;
 
+#define NEW_CLASS(ClassName) \
+    new #ClassName)()
+
 class PatternDict : IDict {
 
     public:
         PatternDict();
+        PatternDict(const std::string key_class, const std::string value_class);
         ~PatternDict();
 
-        int Set(const IKey* key, const IValue* value);
+        int Set(const IKey& key, const IValue& value);
         int Del(const IKey& key);
         int Get(const IKey& key, std::vector<IValue*>* value);
         int Load(const std::string& dict_data_load_path);
@@ -69,14 +73,7 @@ class PatternDict : IDict {
 
             Node1(IKey* k, IValue* v) : key(k), value(v) {}
             ~Node1() {
-                if(NULL != key){
-                    delete key;
-                    key = NULL;
-                }
-                if(NULL != value) {
-                    delete value;
-                    value = NULL;
-                }
+            
             }
 
             bool operator == (const Node1& n) {
@@ -125,6 +122,10 @@ class PatternDict : IDict {
         typedef Darts::DoubleArrayImpl<char, unsigned char, long, unsigned long> DartsDatrie;
 
     private:
+        // key protocal
+        std::string                         m_key_class;
+        std::string                         m_value_class;
+
         // reading
         std::vector<DictInfoMeta>           m_dict_info_read;
         std::vector<PrefixInfoMeta>         m_prefix_info_read;

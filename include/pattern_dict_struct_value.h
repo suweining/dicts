@@ -11,6 +11,7 @@ class PatternDictStructValue : public IValue {
 
     public:
         PatternDictStructValue();
+        PatternDictStructValue(const std::string& line);
         ~PatternDictStructValue();
 
         int Init(const void* input);

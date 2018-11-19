@@ -47,8 +47,10 @@ TEST_EXE1	=	unit/ac_matcher_unit
 TEST_OBJS2	=	mmap_reader.o unit/mmap_reader_unit.o
 TEST_EXE2	=	unit/mmap_reader_unit
 
+TEST_OBJS3	= 	unit/pattern_dict_struct_unit.o pattern_dict.o pattern_dict_struct_key.o pattern_dict_struct_value.o util.o log.o
+TEST_EXE3	=	unit/pattern_dict_struct_unit
 
-ALL_TEST	=	$(TEST_EXE1)  $(TEST_EXE2)
+ALL_TEST	=	$(TEST_EXE1)  $(TEST_EXE2) $(TEST_EXE3)
 ALL_TARGETS	= 	$(TARGET1) 
 
 all: $(ALL_TARGETS)
@@ -68,6 +70,9 @@ $(TEST_EXE1): $(TEST_OBJS1)
 $(TEST_EXE2): $(TEST_OBJS2)
 	$(CPP) -o $@ $^ $(LDFLAGS)
 	$(TEST_EXE2)
+
+$(TEST_EXE3):$(TEST_OBJS3)
+	$(CPP) $(CPPFLAGS) -o $@ $^ $(LDFLAGS)
 
 .PHONY: clean
 clean:

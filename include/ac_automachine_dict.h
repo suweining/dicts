@@ -29,8 +29,6 @@ class AcAutomachineDict : public Dict {
         std::vector<std::string>                        m_words;
         std::vector<int>                                m_line_wordcount;
         std::map<std::string, std::vector<int> >        m_word_inlines;
-
-
 };
 
 #endif
