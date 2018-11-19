@@ -26,6 +26,7 @@ class IDict {
         virtual int Load(const std::string& dict_data_load_path) = 0;
         virtual int Dump(const std::string& dict_data_dump_path) = 0;
         virtual int Finalize() = 0;
+        virtual int Info(std::string* info) = 0;
 
         virtual int Clear() = 0;
         virtual ~IDict() {}

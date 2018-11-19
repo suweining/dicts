@@ -31,6 +31,7 @@ class PatternDict : IDict {
         int Dump(const std::string& dict_data_dump_path);
         int Finalize();
 
+        int Info(std::string* info);
         int Clear();
 
     private:

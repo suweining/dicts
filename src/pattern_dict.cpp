@@ -253,6 +253,12 @@ int PatternDict::Finalize() {
     Separation();
     return 0;
 }
+
+int PatternDict::Info(std::string* info) {
+
+    *info = "pattern dict";
+    return 0;
+}
 int PatternDict::Clear() {
     if(m_dict_info_write.size() > 0) {
         std::vector<DictInfoMeta>   t_dict_info_write;
