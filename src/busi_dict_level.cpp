@@ -203,7 +203,172 @@ int CBusiDictLevel::DelDict(const std::string& dict_unit) {
         
     return 0;
 }
+int CBusiDictLevel::DelKey(const std::string& dict_unit, const std::string& key) {
+    if(0 == m_dict_repo_online.count(dict_unit)) {
+        log (LOG_ERROR, "file:%s\tline:%d\ttid:%lld\tfunc:DelKey\tinfo:%s not exist", __FILE__, __LINE__, pthread_self(), dict_unit.c_str());
+        return 1; 
+    }
 
+    IDict* d = m_dict_repo_online[dict_unit];
+
+    IKey *k = NULL;
+    switch(m_dict_type[dict_unit]) {
+        case DICT_KV:
+            break;
+        case DICT_PATTERN:
+            break;
+        case DICT_CONTAIN:
+            break;
+        case DICT_CONTAIN_MULTI:
+            break;
+        case DICT_CONTAIN_MULTI_SEQ:
+            break;
+        default:
+
+    }
+    
+    if(NULL == k) {
+        log (LOG_ERROR, "file:%s\tline:%d\ttid:%lld\tfunc:DelKey\tinfo:gen key fail", __FILE__, __LINE__, pthread_self());
+        return 2;
+    }
+
+    if(d->Del(*k)) {
+        log (LOG_ERROR, "file:%s\tline:%d\ttid:%lld\tfunc:DelKey\tinfo:%s Del fail", __FILE__, __LINE__, pthread_self(), dict_unit.c_str());
+        return 3; 
+    }
+    return 0;
+}
+
+int CBusiDictLevel::Match(const std::string& dict_unit, const std::string& key, std::vector<std::string>* values) {
+    
+    if(NULL == values) {
+        return 1; 
+    }
+
+    if(0 == m_dict_repo_online.count(dict_unit)) {
+        log (LOG_ERROR, "file:%s\tline:%d\ttid:%lld\tfunc:Match\tinfo:%s not exist", __FILE__, __LINE__, pthread_self(), dict_unit.c_str());
+        return 2; 
+    }
+
+    IDict* d = m_dict_repo_online[dict_unit];
+
+    IKey *k = NULL;
+    switch(m_dict_type[dict_unit]) {
+        case DICT_KV:
+            break;
+        case DICT_PATTERN:
+            break;
+        case DICT_CONTAIN:
+            break;
+        case DICT_CONTAIN_MULTI:
+            break;
+        case DICT_CONTAIN_MULTI_SEQ:
+            break;
+        default:
+
+    }
+    
+    if(NULL == k) {
+        log (LOG_ERROR, "file:%s\tline:%d\ttid:%lld\tfunc:Match\tinfo:gen key fail", __FILE__, __LINE__, pthread_self());
+        return 3;
+    }
+
+    std::vector<IValue*> vals;
+
+    if(d->Get(*k, &vals)) {
+        log (LOG_ERROR, "file:%s\tline:%d\ttid:%lld\tfunc:Match\tinfo:%s match fail", __FILE__, __LINE__, pthread_self(), dict_unit.c_str());
+        return 4; 
+    }
+   
+    FOR_EACH(val_itr, vals) {
+        std::string v;
+        val_itr->ToString(&v);
+        values->push_back(v);
+    }
+
+    FOR_EACH(val_itr, vals) {
+        delete *val_itr; 
+    }
+    return 0;
+}
+
+int CBusiDictLevel::MatchOrder(const std::string& key, int* hit, std::string* hit_dict_unit, std::vector<std::string>* values) {
+
+    if(0 == order.size()) {
+        *hit = 1;
+        log (LOG_WARNING, "file:%s\tline:%d\ttid:%lld\tfunc:MatchOrder\tinfo:order's size is 0", __FILE__, __LINE__, pthread_self());
+        return 0;
+    }
+
+    std::vector<std::string>    vals;
+    std::string                 dict_unit;
+    FOR_EACH(order_itr, m_order) {
+        if(Match(*order_itr, key, &vals)) {
+            log (LOG_WARNING, "file:%s\tline:%d\ttid:%lld\tfunc:MatchOrder\tinfo:match failed", __FILE__, __LINE__, pthread_self());
+            continue;
+        } 
+        if(0 != vals.size()) {
+            dict_unit = *order_itr;
+            break; 
+        }
+    }
+    if(0 != vals.size()) {
+        // check hit the blacklist or whitelist
+        if(m_blacklist_dict.count(dict_unit)) {
+            *hit = 2; 
+        }
+        else if(m_whitelist_dict.count(dict_unit)) {
+            *hit = 3; 
+        }
+        else {
+            log (LOG_WARNING, "file:%s\tline:%d\ttid:%lld\tfunc:MatchOrder\tinfo:hit dict:%s not blacklist/whitelist", __FILE__, __LINE__, pthread_self(), dict_unit.c_str());
+            *hit = 4; 
+        }
+    }
+
+    if(NULL != hit_dict_unit) {
+        hit_dict_unit->swap(dict_unit); 
+    }
+
+    if(NULL != value) {
+        value->swap(vals); 
+    }
+
+    return 0;
+}
+
+int CBusiDictLevel::Info(std::map<std::string, std::string>* infos) {
+    if(NULL == infos) {
+        return 1; 
+    }
+
+    FOR_EACH(dict_repo_itr, m_dict_repo_online) {
+        std::string dict_unit = dict_repo_itr->first;
+        std::string dict_path = m_dict_path[dict_unit];
+        std::string dict_kind = (0 != m_blacklist_dict.count(dict_unit) ? "blacklist" : "whitelist");
+        DICT_TYPE   dict_type = m_dict_type[dict_unit];
+        std::string dict_info;
+        
+        m_dict_repo_online[dict_unit]->Info(&dict_info);
+        
+        std::ostringstream oss;
+        oss << "dict_name:" << dict_unit << "\t"
+            << "dict_path:" << dict_path << "\t"
+            << "dict_kind:" << dict_kind << "\t"
+            << "dict_type:" << dict_type << "\t";
+            << "dict_info:" << dict_info << "\n";
+
+        (*infos)[dict_unit] = oss.c_str());
+    }
+
+    std::string order;
+    FOR_EACH(order_itr, m_order) {
+        order += *order_itr + "\t"; 
+    }
+    (*infos)["match_order"] = order;
+
+    return 0;
+}
 const double CBusiDictLevel::GetCurrentTimestamp() {
     struct timeval tv;
     gettimeofday(&tv,NULL);

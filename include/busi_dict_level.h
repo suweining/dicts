@@ -35,13 +35,14 @@ class CBusiDictLevel{
 
         int DelDict(const std::string& level, const std::string& dict_unit);
 
-        int DelKey(const std::string& level, const std::string& dict_unit, const std::string& key);
+        int DelKey(const std::string& dict_unit, const std::string& key);
 
-        int Match(const std::string& level, const std::string& dict_unit, const std::string& key, std::vector<std::string>* value);
+        int Match(const std::string& dict_unit, const std::string& key, std::vector<std::string>* value);
 
-        int MatchOrder(const std::string& level, const std::string& key, std::vector<std::string>* value);
+        int MatchOrder(const std::string& key, int* hit, std::string* hit_dict_unit = NULL, std::vector<std::string>* value = NULL);
 
-        int Info(const std::string& level, std::map<std::string, std::string>* infos);
+        int Info(std::map<std::string, std::string>* infos);
+
     private:
         const double GetCurrentTimestamp();
 
@@ -49,6 +50,7 @@ class CBusiDictLevel{
         std::string                             m_level;
         std::string                             m_config_path;
         std::string                             m_dump_path;
+        std::vector<std::string>                m_order;
 
         std::map<std::string, IDict*>           m_dict_repo_online;
         std::map<double, IDict*>                m_dict_repo_offline;
