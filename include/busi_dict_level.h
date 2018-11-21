@@ -44,6 +44,7 @@ class CBusiDictLevel{
         int Info(std::map<std::string, std::string>* infos);
 
     private:
+        int ReadConfig();
         const double GetCurrentTimestamp();
         DICT_TYPE GetDictType(const std::string& dict_type_str);
 
@@ -55,6 +56,7 @@ class CBusiDictLevel{
 
         std::map<std::string, IDict*>           m_dict_repo_online;
         std::map<double, IDict*>                m_dict_repo_offline;
+
         std::map<std::string, std::string>      m_dict_path;
         std::map<std::string, DICT_TYPE>        m_dict_type;
 

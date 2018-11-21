@@ -32,7 +32,9 @@ class CBusiDictHandler {
         int Info(const std::string& level, std::map<std::string, std::string>* infos);
 
     private:
+        int ReadConfig();
+    private:
         std::string                     m_config_path;
-        std::map<std::string, IDict*>   m_dict_repo;
+        std::map<std::string, CBusiDictLevel*>   m_dict_level_pro;
 };
 #endif
