@@ -45,6 +45,7 @@ class CBusiDictLevel{
 
     private:
         const double GetCurrentTimestamp();
+        DICT_TYPE GetDictType(const std::string& dict_type_str);
 
     private:
         std::string                             m_level;

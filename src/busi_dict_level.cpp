@@ -3,6 +3,7 @@
 #include "busi_dict_handler.h"
 #include "util.h"
 #include "log.h"
+#include "ini.h"
 
 CBusiDictLevel::CBusiDictLevel() : m_level(""), m_config_path(""), m_dump_path("dump") {}
 CBusiDictLevel::CBusiDictLevel(const std::string& level) : m_level(level), m_config_path(""), m_dump_path("dump") {}
@@ -30,8 +31,104 @@ int CBusiDictLevel::SetLevel(const std::string& level) {
 
 int CBusiDictLevel::Load() {
 
-    // TODO: read config 
+    // TODO: check config
+    if(0 == m_config_path.size()) {
+        log (LOG_ERROR, "file:%s\tline:%d\ttid:%lld\tfunc:Load\tinfo:config file is null", __FILE__, __LINE__, pthread_self());
+        return 1;
+    }
     // TODO: load the file
+    INI* ini_reader = ini_init(m_config_path.c_str());
+    char* read_iterm;
+
+
+    // read dump_path
+    if(NULL != (read_iterm = ini_read(ini_reader, m_level.c_str(), "dump_path"))) {
+        m_dump_path = read_iterm; 
+    }
+    else {
+        m_dump_path = "dump";
+        log (LOG_ERROR, "file:%s\tline:%d\ttid:%lld\tfunc:Load\tinfo:level %s has no dump_path", __FILE__, __LINE__, pthread_self(), m_level.c_str());
+    }
+
+    // read blacklist_dict
+    std::string blacklist;
+    if(NULL != (read_iterm = ini_read(ini_reader, m_level.c_str(), "blacklist"))) {
+        blacklist = read_iterm; 
+    }
+    else {
+        log (LOG_WARNING, "file:%s\tline:%d\ttid:%lld\tfunc:Load\tinfo:level %s has no blacklist", __FILE__, __LINE__, pthread_self(), m_level.c_str());
+    }
+    std::vector<std::string> blacklist_parts = StringToToken(blacklist, false, ';');
+    FOR_EACH(blacklist_parts_itr, blacklist_parts) {
+        m_blacklist_dict.insert(*blacklist_parts_itr);
+    }
+
+    // read whitelist
+    std::string whitelist;
+    if(NULL != (read_iterm = ini_read(ini_reader, m_level.c_str(), "whitelist"))) {
+        whitelist = read_iterm; 
+    }
+    else {
+        log (LOG_WARNING, "file:%s\tline:%d\ttid:%lld\tfunc:Load\tinfo:level %s has no whitelist", __FILE__, __LINE__, pthread_self(), m_level.c_str());
+    }
+    std::vector<std::string> whitelist_parts = StringToToken(whitelist, false, ';');
+    FOR_EACH(whitelist_parts_itr, whitelist_parts) {
+        m_whitelist_dict.insert(*whitelist_parts_itr);
+    }
+
+    // read dict_type
+    std::string dict_type_str;
+    if(NULL != (read_iterm = ini_read(ini_reader, m_level.c_str(), "dict_type"))) {
+        dict_type_str = read_iterm; 
+    }
+    else {
+        dict_type_str = "dict_kv;dict_pattern;dict_contain;dict_contain_multi;dict_contain_multi_seq";
+        log (LOG_WARNING, "file:%s\tline:%d\ttid:%lld\tfunc:Load\tinfo:level %s has no dict_type", __FILE__, __LINE__, pthread_self(), m_level.c_str());
+    }
+
+    // read dict path info in config
+    std::vector<std::string> dict_type_str_parts= StringToToken(dict_type_str, false, ';');
+    FOR_EACH(dict_type_str_parts_itr, dict_type_str_parts) {
+
+        // check type
+        DICT_TYPE dt = GetDictType(*dict_type_itr);
+        if(0 == dt) {
+            log (LOG_WARNING, "file:%s\tline:%d\ttid:%lld\tfunc:Load\tinfo:level %s's %s is illegality", __FILE__, __LINE__, pthread_self(), m_level.c_str(), dict_type_itr->c_str());
+            continue;
+        }
+
+        // read dict_path
+        std::string dict_path_info;
+        if(NULL != (read_iterm = ini_read(ini_reader, m_level.c_str(), dict_type_str_parts_itr->c_str()))) {
+            dict_path_info = read_iterm; 
+        }
+        else {
+            log (LOG_WARNING, "file:%s\tline:%d\ttid:%lld\tfunc:Load\tinfo:level %s's %s is null", __FILE__, __LINE__, pthread_self(), m_level.c_str(), dict_type_itr->c_str());
+            continue;
+        }
+
+        // m_dict_path; m_dict_type
+        std::vector<std::string> dict_path_info_parts = StringToToken(dict_path_info, false, ';');
+        FOR_EACH(dict_path_info_parts_itr, dict_path_info_parts) {
+            // check dict_path_info
+            std::vector<std::string> dict_unit_path_parts = StringToToken(*dict_path_info_parts_itr, false, ':');
+            if(2 != dict_unit_path_parts.size()) {
+                log (LOG_WARNING, "file:%s\tline:%d\ttid:%lld\tfunc:Load\tinfo:level:%s dict_type:%s has illegality info:%s", __FILE__, __LINE__, pthread_self(), m_level.c_str(), dict_type_itr->c_str(), dict_path_info_parts_itr->c_str());
+                continue;
+            }
+
+            if(0 != m_dict_path.count(dict_unit_path_parts[0])) {
+                log (LOG_ERROR, "file:%s\tline:%d\ttid:%lld\tfunc:Load\tinfo:level:%s dict_type:%s has repetitive dict_info:%s", __FILE__, __LINE__, pthread_self(), m_level.c_str(), dict_type_itr->c_str(), dict_path_info_parts_itr->c_str());
+                return 3;
+            }
+
+            m_dict_path[ dict_unit_path_parts[0] ] = dict_unit_path_parts[1];
+            m_dict_type[ dict_unit_path_parts[0] ] = dt;
+        }
+
+
+    }
+
 
 } 
 
@@ -200,7 +297,7 @@ int CBusiDictLevel::DelDict(const std::string& dict_unit) {
     m_dict_repo_offline[cur_timestamp] = m_dict_repo_online[dict_unit];
 
     m_dict_repo_online.erase(dict_unit);
-        
+
     return 0;
 }
 int CBusiDictLevel::DelKey(const std::string& dict_unit, const std::string& key) {
@@ -373,4 +470,20 @@ const double CBusiDictLevel::GetCurrentTimestamp() {
     struct timeval tv;
     gettimeofday(&tv,NULL);
     return tv.tv_sec * 1000.0 + tv.tv_usec * 1.0 / 1000;
+}
+
+CBusiDictLevel::DICT_TYPE CBusiDictLevel::GetDictType(const std::string& dict_type_str) {
+    DICT_TYPE dt = 0;
+    static string[] dict_type_vec = {"dict_key", "dict_pattern", "dict_contain", "dict_contain_multi", "dict_contain_multi_seq"};
+
+    size_t len = sizeof(dict_type_vec) / sizeof(&dict_type_vec[0]);
+
+    for(size_t i = 0; i < len; ++i) {
+        if(dict_type_str == dict_type_vec) {
+            dt = 1 + i;
+            break;
+        }
+    }
+
+    return dt;
 }
