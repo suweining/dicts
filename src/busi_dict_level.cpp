@@ -31,15 +31,35 @@ int CBusiDictLevel::SetLevel(const std::string& level) {
 
 int CBusiDictLevel::Load() {
 
+    if(ReadConfig()) {
+        return 1; 
+    }
+
+    FOR_EACH(dict_path_itr, m_dict_path) {
+
+        std::string dict_unit = dict_path_itr->first; 
+
+        m_dict_repo_online[dict_unit] = NULL;
+
+        if(ReloadDict(dict_unit)) {
+            log (LOG_ERROR, "file:%s\tline:%d\ttid:%lld\tfunc:Reload\tinfo:reload %s fail", __FILE__, __LINE__, pthread_self(), dict_unit.c_str());
+            continue; 
+        }
+    } 
+    returnn 0;
+}
+
+int CBusiDictLevel::ReadConfig() {
+
     // TODO: check config
     if(0 == m_config_path.size()) {
         log (LOG_ERROR, "file:%s\tline:%d\ttid:%lld\tfunc:Load\tinfo:config file is null", __FILE__, __LINE__, pthread_self());
         return 1;
     }
+
     // TODO: load the file
     INI* ini_reader = ini_init(m_config_path.c_str());
     char* read_iterm;
-
 
     // read dump_path
     if(NULL != (read_iterm = ini_read(ini_reader, m_level.c_str(), "dump_path"))) {
@@ -160,7 +180,7 @@ int CBusiDictLevel::ReloadDict(const std::string& dict_unit) {
         return 2;
     }
 
-    IDict* d = NULL; 
+    IDict* new_dict = NULL; 
 
     switch(m_dict_type[dict_unit]) {
         case DICT_KV:
@@ -177,17 +197,37 @@ int CBusiDictLevel::ReloadDict(const std::string& dict_unit) {
 
     }
 
-    if(NULL == d) {
+    if(NULL == new_dict) {
         log (LOG_ERROR, "file:%s\tline:%d\ttid:%lld\tfunc:ReloadDict\tinfo:%s type not exist", __FILE__, __LINE__, pthread_self(), dict_unit.c_str());
         return 3;
     }
 
-    if(d->Load(dict_unit_path)) {
+    if(new_dict->Load(dict_unit_path)) {
         log (LOG_ERROR, "file:%s\tline:%d\ttid:%lld\tfunc:ReloadDict\tinfo:%s load fail", __FILE__, __LINE__, pthread_self(), dict_unit.c_str());
         return 4; 
+    }    
+    
+    // add new_dict to m_dict_repo_online
+    IDict* old_dict = m_dict_repo_online[dict_unit];
+    m_dict_repo_online[dict_unit] = new_dict;
+
+    // deal old_dict
+    if(NULL == old_dict) {
+        return 0; 
     }
-    // TODO: add d to m_dict_repo_online
-    //
+
+    log (LOG_INFO, "file:%s\tline:%d\ttid:%lld\tfunc:ReloadDict\tnew_dict:%p,old_dict:%p", __FILE__, __LINE__, pthread_self(), new_dict, old_dict);
+
+   double cur_timestamp = GetCurrentTimestamp();
+
+    while(0 != m_dict_repo_offline.count(cur_timestamp)) {
+        sleep(1); 
+        cur_timestamp = GetCurrentTimestamp();
+    }
+
+    m_dict_repo_offline[cur_timestamp] = old_dict;
+
+
     return 0;
 }
 
@@ -292,6 +332,7 @@ int CBusiDictLevel::DelDict(const std::string& dict_unit) {
 
     while(0 != m_dict_repo_offline.count(cur_timestamp)) {
         sleep(1); 
+        cur_timestamp = GetCurrentTimestamp();
     }
 
     m_dict_repo_offline[cur_timestamp] = m_dict_repo_online[dict_unit];
