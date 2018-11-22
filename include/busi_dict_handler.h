@@ -16,7 +16,7 @@ class CBusiDictHandler {
         int DumpLevel(const std::string& level);
         int DumpDict(const std::string& level, const std::string& dict_unit);
 
-        int AddDict(const std::string& level, const std::string& dict_unit, const std::string& dict_path, bool is_blacklist = true);
+        int AddDict(const std::string& level, const std::string& dict_unit, int dict_type, const std::string& dict_path, bool is_blacklist = true);
 
         int AddKey(const std::string& level, const std::string& dict_unit, const std::string& key, const std::string& value);
 
@@ -33,8 +33,10 @@ class CBusiDictHandler {
 
     private:
         int ReadConfig();
+
     private:
-        std::string                     m_config_path;
-        std::map<std::string, CBusiDictLevel*>   m_dict_level_pro;
+        std::string                                 m_config_path;
+        std::string                                 m_levels;
+        std::map<std::string, CBusiDictLevel*>      m_dict_level_repo;
 };
 #endif

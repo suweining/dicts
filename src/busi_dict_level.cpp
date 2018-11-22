@@ -37,7 +37,7 @@ int CBusiDictLevel::Load() {
 
     FOR_EACH(dict_path_itr, m_dict_path) {
 
-        std::string dict_unit = dict_path_itr->first; 
+        std::string dict_unit = dict_path_itr->first;
 
         m_dict_repo_online[dict_unit] = NULL;
 
@@ -45,7 +45,7 @@ int CBusiDictLevel::Load() {
             log (LOG_ERROR, "file:%s\tline:%d\ttid:%lld\tfunc:Reload\tinfo:reload %s fail", __FILE__, __LINE__, pthread_self(), dict_unit.c_str());
             continue; 
         }
-    } 
+    }
     returnn 0;
 }
 
@@ -53,7 +53,7 @@ int CBusiDictLevel::ReadConfig() {
 
     // TODO: check config
     if(0 == m_config_path.size()) {
-        log (LOG_ERROR, "file:%s\tline:%d\ttid:%lld\tfunc:Load\tinfo:config file is null", __FILE__, __LINE__, pthread_self());
+        log (LOG_ERROR, "file:%s\tline:%d\ttid:%lld\tfunc:ReadConfig\tinfo:config file is null", __FILE__, __LINE__, pthread_self());
         return 1;
     }
 
@@ -67,7 +67,7 @@ int CBusiDictLevel::ReadConfig() {
     }
     else {
         m_dump_path = "dump";
-        log (LOG_ERROR, "file:%s\tline:%d\ttid:%lld\tfunc:Load\tinfo:level %s has no dump_path", __FILE__, __LINE__, pthread_self(), m_level.c_str());
+        log (LOG_ERROR, "file:%s\tline:%d\ttid:%lld\tfunc:ReadConfig\tinfo:level %s has no dump_path", __FILE__, __LINE__, pthread_self(), m_level.c_str());
     }
 
     // read blacklist_dict
@@ -76,7 +76,7 @@ int CBusiDictLevel::ReadConfig() {
         blacklist = read_iterm; 
     }
     else {
-        log (LOG_WARNING, "file:%s\tline:%d\ttid:%lld\tfunc:Load\tinfo:level %s has no blacklist", __FILE__, __LINE__, pthread_self(), m_level.c_str());
+        log (LOG_WARNING, "file:%s\tline:%d\ttid:%lld\tfunc:ReadConfig\tinfo:level %s has no blacklist", __FILE__, __LINE__, pthread_self(), m_level.c_str());
     }
     std::vector<std::string> blacklist_parts = StringToToken(blacklist, false, ';');
     FOR_EACH(blacklist_parts_itr, blacklist_parts) {
@@ -89,7 +89,7 @@ int CBusiDictLevel::ReadConfig() {
         whitelist = read_iterm; 
     }
     else {
-        log (LOG_WARNING, "file:%s\tline:%d\ttid:%lld\tfunc:Load\tinfo:level %s has no whitelist", __FILE__, __LINE__, pthread_self(), m_level.c_str());
+        log (LOG_WARNING, "file:%s\tline:%d\ttid:%lld\tfunc:ReadConfig\tinfo:level %s has no whitelist", __FILE__, __LINE__, pthread_self(), m_level.c_str());
     }
     std::vector<std::string> whitelist_parts = StringToToken(whitelist, false, ';');
     FOR_EACH(whitelist_parts_itr, whitelist_parts) {
@@ -103,7 +103,7 @@ int CBusiDictLevel::ReadConfig() {
     }
     else {
         dict_type_str = "dict_kv;dict_pattern;dict_contain;dict_contain_multi;dict_contain_multi_seq";
-        log (LOG_WARNING, "file:%s\tline:%d\ttid:%lld\tfunc:Load\tinfo:level %s has no dict_type", __FILE__, __LINE__, pthread_self(), m_level.c_str());
+        log (LOG_WARNING, "file:%s\tline:%d\ttid:%lld\tfunc:ReadConfig\tinfo:level %s has no dict_type", __FILE__, __LINE__, pthread_self(), m_level.c_str());
     }
 
     // read dict path info in config
@@ -113,7 +113,7 @@ int CBusiDictLevel::ReadConfig() {
         // check type
         DICT_TYPE dt = GetDictType(*dict_type_itr);
         if(0 == dt) {
-            log (LOG_WARNING, "file:%s\tline:%d\ttid:%lld\tfunc:Load\tinfo:level %s's %s is illegality", __FILE__, __LINE__, pthread_self(), m_level.c_str(), dict_type_itr->c_str());
+            log (LOG_WARNING, "file:%s\tline:%d\ttid:%lld\tfunc:ReadConfig\tinfo:level %s's %s is illegality", __FILE__, __LINE__, pthread_self(), m_level.c_str(), dict_type_itr->c_str());
             continue;
         }
 
@@ -123,7 +123,7 @@ int CBusiDictLevel::ReadConfig() {
             dict_path_info = read_iterm; 
         }
         else {
-            log (LOG_WARNING, "file:%s\tline:%d\ttid:%lld\tfunc:Load\tinfo:level %s's %s is null", __FILE__, __LINE__, pthread_self(), m_level.c_str(), dict_type_itr->c_str());
+            log (LOG_WARNING, "file:%s\tline:%d\ttid:%lld\tfunc:ReadConfig\tinfo:level %s's %s is null", __FILE__, __LINE__, pthread_self(), m_level.c_str(), dict_type_itr->c_str());
             continue;
         }
 
@@ -133,12 +133,12 @@ int CBusiDictLevel::ReadConfig() {
             // check dict_path_info
             std::vector<std::string> dict_unit_path_parts = StringToToken(*dict_path_info_parts_itr, false, ':');
             if(2 != dict_unit_path_parts.size()) {
-                log (LOG_WARNING, "file:%s\tline:%d\ttid:%lld\tfunc:Load\tinfo:level:%s dict_type:%s has illegality info:%s", __FILE__, __LINE__, pthread_self(), m_level.c_str(), dict_type_itr->c_str(), dict_path_info_parts_itr->c_str());
+                log (LOG_WARNING, "file:%s\tline:%d\ttid:%lld\tfunc:ReadConfig\tinfo:level:%s dict_type:%s has illegality info:%s", __FILE__, __LINE__, pthread_self(), m_level.c_str(), dict_type_itr->c_str(), dict_path_info_parts_itr->c_str());
                 continue;
             }
 
             if(0 != m_dict_path.count(dict_unit_path_parts[0])) {
-                log (LOG_ERROR, "file:%s\tline:%d\ttid:%lld\tfunc:Load\tinfo:level:%s dict_type:%s has repetitive dict_info:%s", __FILE__, __LINE__, pthread_self(), m_level.c_str(), dict_type_itr->c_str(), dict_path_info_parts_itr->c_str());
+                log (LOG_ERROR, "file:%s\tline:%d\ttid:%lld\tfunc:ReadConfig\tinfo:level:%s dict_type:%s has repetitive dict_info:%s", __FILE__, __LINE__, pthread_self(), m_level.c_str(), dict_type_itr->c_str(), dict_path_info_parts_itr->c_str());
                 return 3;
             }
 
