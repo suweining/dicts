@@ -128,8 +128,22 @@ int CAcValidTool::BuildRegex() {
         dbi_itr->dbi_regex = oss.str();
 
         log (LOG_DEBUG, "%s:%d[tid:%lld]\tCAcValidTool::BuildRegex:%s", __FILE__, __LINE__, pthread_self(), dbi_itr->dbi_regex.c_str());
+
         // 3.sort dbi_indexs for build darts
         std::sort(dbi_itr->dbi_indexs.begin(), dbi_itr->dbi_indexs.end());
+
+        // 4. gen regex_for_dfa
+        oss.str("");
+        oss << dbi_itr->dbi_indexs[0];
+        for(size_t i = 1; i < len; ++i) {
+            if(dbi_itr->dbi_indexs[i] == dbi_itr->dbi_indexs[i-1]) {
+                oss << ","; 
+            }
+            else {
+                oss << ",([0-9]+,){0," << dbi_itr->dbi_indexs[i] -  dbi_itr->dbi_indexs[i - 1] << "}";
+            }
+            oss << dbi_itr->dbi_indexs[i];
+        }
     }
 
     log (LOG_INFO, "%s:%d[tid:%lld]\tCAcValidTool::BuildRegex Success", __FILE__, __LINE__, pthread_self());
@@ -308,6 +322,7 @@ int CAcValidTool::BuildTrieLeafPool(TrieNodeBuild* target_tnb) {
         TrieNodeBuild* cur_tnb = bfs_tnb_queue.front();
         if(cur_tnb->tnb_end - cur_tnb->tnb_begin < DFA_MAX_RECORD) {
             // build dfa 
+            cur_tnb->tnb_pattern_match_index = count;
             ++ count;
             continue;
         }
@@ -316,8 +331,32 @@ int CAcValidTool::BuildTrieLeafPool(TrieNodeBuild* target_tnb) {
         }
     }
     // 2. build the default m_leaf_match_pool
+    std::vector<PatternMatch> leaf_match_pool(count);
+    m_leaf_match_pool.swap(leaf_match_pool);
+    // 3. build m_leaf_match_pool[i].pm_index
+    bfs_tnb_queue.push(target_tnb);
+    while(!bfs_tnb_queue.empty()) {
+        TrieNodeBuild* cur_tnb = bfs_tnb_queue.front();
+        if(cur_tnb->tnb_end - cur_tnb->tnb_begin < DFA_MAX_RECORD) {
+            // build pm_index
+            size_t index = cur_tnb->tnb_pattern_match_index;
+            PatternMatch& pm_ref = m_leaf_match_pool[index];
+            for(size_t i = cur_tnb->tnb_begin; i < cur_tnb->tnb_end; ++i) {
+                pm_ref->pm_index.push_back(i); 
+            }
+            continue;
+        }
+        FOR_EACH(child_tnb_itr, cur_tnb->tnb_child) {
+            bfs_tnb_queue.push(&(child_tnb_itr->second)); 
+        }
+    }
 
-    // 3. build m_leaf_match_pool[i]
+    // 4. build m_leaf_match_pool[i].pm_dfa;
+    size_t len = m_leaf_match_pool.size();
+    for(size_t i = 0; i < len; ++i) {
+        m_leaf_match_pool[i].Build();  
+    }
+
     return 0;
 }
 int CAcValidTool::BuildTrieCopy(TrieNodeBuild& build_tnb, TrieNodeMatch* match_tnm) {
@@ -326,6 +365,12 @@ int CAcValidTool::BuildTrieCopy(TrieNodeBuild& build_tnb, TrieNodeMatch* match_t
     if(NULL == match_tnm) {
         return 0;
     }
+
+    match_tnm->tnm_pattern_match_index = build_tnb.tnb_pattern_match_index;
+    if(-1 != match_tnm->tnm_pattern_match_index) {
+        return 0; 
+    }
+
     match_tnm->tnm_index.swap(build_tnb.tnb_index);
 
     if(0 != match_tnm->tnm_index.size()) {
@@ -383,15 +428,23 @@ int CAcValidTool::MatchSequence(const std::vector<std::string>& keys, void* val)
     //3. sort indexs for match_candidate
     std::sort(indexs.begin(), indexs.end());
 
-    //4. match trie to get candidate
+    //4. gen regex_for_dfa
+    oss.str("");
+    oss << indexs[0];
+    for(size_t i = 1; i < indexs_len; ++i) {
+        oss << "," << indexs[i];
+    }
+    std::string target_index_str = oss.str(); 
+
+    //5. match trie to get candidate
     int rc = 0;
     std::vector<size_t> value;
-    if((rc = MatchCandidate(m_trie_root, indexs, 0, &value)) && rc != 0) {
+    if((rc = MatchCandidateDfa(m_trie_root, indexs, 0,target_index_str, &value)) && rc != 0) {
         log (LOG_WARNING, "%s:%d[tid:%lld]\tCAcValidTool::MatchSequence fail, MatchCandidate errorcode:%d", __FILE__, __LINE__, pthread_self(), rc);
         return 1;
     }
 
-    //5. use re2::partialmatch to get the target readline
+    //6. use re2::partialmatch to get the target readline
     FOR_EACH(val_itr, value) {
         std::string regex = m_dict_basic_infos[*val_itr].dbi_regex;
 
@@ -451,3 +504,64 @@ int CAcValidTool::MatchCandidate(const TrieNodeMatch& target_tnm, const std::vec
     return 0;
 }
 
+int CAcValidTool::MatchCandidateDfa(const TrieNodeMatch& target_tnm, const std::vector<size_t>& indexs, size_t pos, const std::string& target_index_str, void* candidate) {
+    if(-1 != target_tnm.tnm_pattern_match_index) {
+
+        std::vector<size_t>* candidate_ptr = static_cast<std::vector<size_t>*>(candidate);
+
+        size_t index =  target_tnm.tnm_pattern_match_index;
+        std::vector<int> val;
+        m_leaf_match_pool[i].pm_dfa.Match(target_index_str, &val);
+        size_t len = val.size();
+        for(size_t i = 0; i < len; ++i) {
+            candidate_ptr->push_back(m_leaf_match_pool.pm_index[val[i]]);     
+        }
+        return 0;
+    }
+
+    size_t indexs_len = indexs.size();
+    if(pos >= indexs_len) {
+        return 0;
+    }
+
+    for(size_t i = pos; i < indexs_len; ++i) {
+        size_t cur_index = indexs[i];
+        auto child_itr = target_tnm.tnm_child.find(cur_index);
+        if(child_itr != target_tnm.tnm_child.end()) {
+
+            if(child_itr->second > m_trie_pool.size()) {
+                log (LOG_WARNING, "%s:%d[tid:%lld]\tCAcValidTool::MatchCandidateDfa child's index outof  the boundary, pos:%d\tcur_index:%d\tchild:%d", __FILE__, __LINE__, pthread_self(), i, cur_index, child_itr->first);
+                return 1;
+            }
+            if(MatchCandidateDfa(m_trie_pool[ child_itr->second ], indexs, i + 1, target_index_str, candidate)) {
+                return 1;
+            }
+        }
+    }
+
+    return 0;
+}
+int CAcValidTool::PatternMatch::Build() {
+    size_t len = pm_index.size();
+    for(size_t i = 0; i < len; ++i) {
+        size_t index = pm_index[i];
+        pm_dfa.Add(m_dict_basic_infos[index].dbi_regex_for_dfa); 
+    }
+    if(!pm_dfa.Compile()) {
+        return 1; 
+    }
+    return 0;
+}
+
+int CAcValidTool::PatternMatch::Match(const std::string& key, std::vector<size_t>* value) {
+    std::vector<int> val;
+    if(pm_dfa.Match(key, &val)) {
+        return 1; 
+    }
+
+    size_t len = val.size();
+    for(size_t i = 0; i < len; ++i) {
+        value->push_back(pm_index[ val[i] ]); 
+    }
+    return 0;
+}

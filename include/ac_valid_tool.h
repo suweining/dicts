@@ -22,6 +22,7 @@ class CAcValidTool {
         std::string                     dbi_readline; // read from dict_path
         std::vector<std::string>        dbi_words; // split the key words from dbi_readline
         std::string                     dbi_regex; // index regex
+        std::string                     dbi_regex_for_dfa; // index regex
         std::vector<size_t>             dbi_indexs; // words in word_table
 
         DictBasicInfomation(const std::string& readline) : dbi_readline(readline) {
@@ -49,24 +50,22 @@ class CAcValidTool {
         size_t tnb_begin;
         size_t tnb_end;
         size_t tnb_cur; // 
-        size_t tnm_pattern_match_index;
+        size_t tnb_pattern_match_index;
         std::vector<size_t> tnb_index; // if leaf, then tn_index is the index of m_dict_basic_infos else is 0
         std::map<size_t, TrieNodeBuild> tnb_child; // the child
-        TrieNodeBuild() :  tnb_begin(0), tnb_end(0), tnb_cur(0) {}
+        TrieNodeBuild() :  tnb_begin(0), tnb_end(0), tnb_cur(0), tnb_pattern_match_index(-1) {}
     };
 
-    class PatternMatch{
-        public:
-            PatternMatch() : psm_dfa(default_dfa_ropt, default_anchor) {
-            }
-            int Build(const std::vector<std::string>& regex_vec,
-                    const std::vector<size_t>& value_vec);
+    struct PatternMatch{
 
-            int Match(const std::string& key, std::vector<size_t>* value);
+        std::vector<size_t> pm_index; 
+        re2::RE2::Set pm_dfa;
 
-        private:
-            std::vector<size_t> psm_index; 
-            re2::RE2::Set psm_dfa;
+        PatternMatch() : pm_dfa(default_dfa_ropt, default_anchor) {}
+
+        int Build();
+
+        int Match(const std::string& key, std::vector<size_t>* value);
     };
 
     struct TrieNodeMatch{
@@ -74,7 +73,7 @@ class CAcValidTool {
         std::vector<size_t> tnm_index; // if leaf, then tn_index is the index of m_dict_basic_infos else is 0
         std::map<int, int> tnm_child; // the child
 
-        TrieNodeMatch(){
+        TrieNodeMatch() : tnm_pattern_match_index(-1){
        }
     };
 
@@ -110,6 +109,7 @@ class CAcValidTool {
         int BuildTrieLeafPool(TrieNodeBuild* target_tnb);
         int BuildTrieCopy(TrieNodeBuild& build_tnb, TrieNodeMatch* match_tnm);
         int MatchCandidate(const TrieNodeMatch& target_tnm, const std::vector<size_t>& indexs, size_t pos, void* candidate);
+        int MatchCandidateDfa(const TrieNodeMatch& target_tnm, const std::vector<size_t>& indexs, size_t pos, const std::string& target_index_str, void* candidate);
 
     // member
     private:
