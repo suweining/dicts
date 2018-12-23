@@ -107,7 +107,7 @@ int PatternDictStructKey::SetKey(const void* input) {
         return 1; 
     }
 
-    log(LOG_DEBUG, "%s:%d\ttid:%lld\tclass:PatternDictStructKey\tfunction:SetKey\tinfo:input is %s", __FILE__, __LINE__, pthread_self(), input_str->size());
+    log(LOG_DEBUG, "%s:%d\ttid:%lld\tclass:PatternDictStructKey\tfunction:SetKey\tinfo:input is %d", __FILE__, __LINE__, pthread_self(), input_str->size());
     // get host
     std::vector<std::string> url_parts = StringToTokens(*input_str, false, '/');
     size_t url_parts_len = url_parts.size();

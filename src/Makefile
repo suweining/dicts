@@ -28,6 +28,7 @@ INCLUDE		=	\
 LIBS		=	\
 			-L$(HOME)/lib \
 			-L$(LIB_RE)/lib \
+			$(HOME)/libdicts/lib/libdicts.a \
 			$(LIB_AHOCORASICK)/lib/libahocorasick.a \
 			$(LIB_GTEST)/lib/libgtest.a \
 			$(LIB_THRIFT)/lib/libthrift.a \
@@ -38,10 +39,13 @@ LIBS		=	\
 LDFLAGS		= 	$(LIBS) -lboost_thread-mt -lboost_system-mt -lre2 -Wl,-rpath=../lib -Wl,-rpath=./lib
 
 
-OBJS1		= 	ac_automachine_dict.o  ac_matcher.o util.o log.o mmap_reader.o  pattern_dict.o pattern_dict_struct_key.o pattern_dict_struct_value.o main.o
+OBJS1		= 	ini.o ac_automachine_dict.o  ac_matcher.o util.o log.o mmap_reader.o  pattern_dict.o pattern_dict_struct_key.o pattern_dict_struct_value.o busi_dict_level.o busi_dict_handler.o main.o
 TARGET1		= 	server
 
-TEST_OBJS1	=	unit/ac_matcher_unit.o 
+OBJS2		= 	ini.o ac_automachine_dict.o  ac_matcher.o util.o log.o mmap_reader.o  pattern_dict.o pattern_dict_struct_key.o pattern_dict_struct_value.o busi_dict_level.o busi_dict_handler.o
+TARGET2		= 	../bin/libdicts.a
+
+TEST_OBJS1	=	unit/ac_matcher_unit.o
 TEST_EXE1	=	unit/ac_matcher_unit
 
 TEST_OBJS2	=	mmap_reader.o unit/mmap_reader_unit.o
@@ -50,8 +54,13 @@ TEST_EXE2	=	unit/mmap_reader_unit
 TEST_OBJS3	= 	unit/pattern_dict_struct_unit.o pattern_dict.o pattern_dict_struct_key.o pattern_dict_struct_value.o util.o log.o
 TEST_EXE3	=	unit/pattern_dict_struct_unit
 
-ALL_TEST	=	$(TEST_EXE1)  $(TEST_EXE2) $(TEST_EXE3)
-ALL_TARGETS	= 	$(TARGET1) 
+TEST_OBJS4	= 	unit/dict_handler_unit.o
+TEST_EXE4	=	unit/dict_handler_unit
+
+
+
+ALL_TEST	=	$(TEST_EXE1)  $(TEST_EXE2) $(TEST_EXE3) $(TEST_EXE4)
+ALL_TARGETS	= 	$(TARGET1) $(TARGET2)
 
 all: $(ALL_TARGETS)
 
@@ -62,6 +71,10 @@ test: $(ALL_TEST)
 
 $(TARGET1): $(OBJS1)
 	$(CPP) -o $@ $^ $(LDFLAGS)
+
+$(TARGET2): $(OBJS2)
+	ar cr $(TARGET2) $(OBJS2)
+
 
 $(TEST_EXE1): $(TEST_OBJS1)
 	$(CPP) -o $@ $^ $(LDFLAGS)
@@ -74,6 +87,10 @@ $(TEST_EXE2): $(TEST_OBJS2)
 $(TEST_EXE3):$(TEST_OBJS3)
 	$(CPP) $(CPPFLAGS) -o $@ $^ $(LDFLAGS)
 
+$(TEST_EXE4):$(TEST_OBJS4)
+	$(CPP) $(CPPFLAGS) -o $@ $^ $(LDFLAGS)
+
+
 .PHONY: clean
 clean:
-	rm -f $(HOME)/src/*.o $(HOME)/$(ALL_TARGETS) $(HOME)/$(ALL_TEST)
+	rm -f $(HOME)/src/*.o $(HOME)/$(ALL_TARGETS) $(HOME)/$(ALL_TEST) $(TARGET2)

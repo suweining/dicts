@@ -3,31 +3,31 @@
 #include "pattern_dict.h"
 #include "pattern_dict_struct_key.h"
 
-
-TEST(PatternDictStruct, Init1) {
-    std::string regex;
-    std::string target;
-    while(true) {
-        std::cout << "input regex target" << std::endl;
-        std::cin >> regex >> target;
-        if(RE2::PartialMatch(target.c_str(), regex.c_str())) {
-            std::cout << "target:" << target << "\thit regex:" << regex << std::endl; 
-        }
-    }
-    ASSERT_TRUE(0 == 0);
-}
-TEST(PatternDictStruct, Init) {
+TEST(PatternDictStruct, Get) {
     PatternDict* pd = new PatternDict();
     int ret = pd->Load("./unit/data/struct_test.data");
     PatternDictStructKey* k = new PatternDictStructKey();
     std::string url("https://www.haozu.com/sh/shouesshangpu/test/");
-    while(std::cin >> url) {
-        k->SetKey(&url);
-        std::vector<IValue*> values;
-        ret = pd->Get(*k, &values);
-        std::cout << "value.size:" << values.size() << std::endl;
-        ASSERT_TRUE(ret == 0);
+    k->SetKey(&url);
+    std::vector<IValue*> values;
+    ret = pd->Get(*k, &values);
+    ASSERT_TRUE(ret == 0);
+
+    size_t len = values.size();
+    std::cout << "len:" << len << std::endl;
+    for(size_t i = 0; i < len; ++i) {
+        std::string v;
+        values[i]->Val((void*)&v);
+        std::cout << "ret_val:" << v << std::endl;
     }
+    ret = pd->Get(*k, &values);
+    std::cout << "len:" << len << std::endl;
+    for(size_t i = 0; i < len; ++i) {
+        std::string v;
+        values[i]->Val((void*)&v);
+        std::cout << "ret_val:" << v << std::endl;
+    }
+
 }
 int main(int argc, char* argv[]) {
     testing::InitGoogleTest(&argc, argv);

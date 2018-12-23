@@ -41,12 +41,12 @@ int PatternDict::Set(const IKey& key, const IValue& value) {
     std::string re_string;
     int rc;
     if((rc = key.GetKey(&re_string)) && rc != 0) {
-        std::cerr << "key() error:" << rc << std::endl;
+        log (LOG_ERROR, "file:%s\tline:%d\ttid:%lld\t\tclass:PatternDict\tfunc:Set\tinfo:GetKey, rc:%d", __FILE__, __LINE__, pthread_self(), rc);
         return 1;
     }
     // check the re is legal
     if((rc = ReLegal(re_string)) && rc != 0) {
-        std::cerr << "ReLegal() error:" << rc << std::endl;
+        log (LOG_ERROR, "file:%s\tline:%d\ttid:%lld\tclass:PatternDict\tfunc:Set\tinfo:ReLegal error, rc:%d", __FILE__, __LINE__, pthread_self(), rc);
         return 2;
     }
 
@@ -135,7 +135,7 @@ int PatternDict::Get(const IKey& key, std::vector<IValue*>* value) {
     for(size_t i = 0; i < hit_dict_info.size(); ++i) {
         std::string str;
         hit_dict_info[i].key->ToString(&str);
-        std::cout << "debug hit key info:" << str << std::endl;
+        log(LOG_DEBUG, "%s:%d\ttid:%lld\tclass:PatternDict\tfunction:Get\tinfo:hit key info[%s]", __FILE__, __LINE__, pthread_self(), str.c_str());
         value->push_back(hit_dict_info[i].value);
     }
 
@@ -153,9 +153,10 @@ int PatternDict::Load(const std::string& dict_data_load_path) {
     // read file
     std::ifstream in_stream(dict_data_load_path.c_str(), std::ifstream::in);
     if(!in_stream.is_open()) {
-        std::cerr << "error to open input file:" << dict_data_load_path << std::endl; 
+        log(LOG_ERROR, "%s:%d\ttid:%lld\tclass:PatternDict\tfunction:Load\tinfo:fail to open %s", __FILE__, __LINE__, pthread_self(),dict_data_load_path.c_str());
         return 1;
     }
+
     std::string line;
     while(std::getline(in_stream, line) && !in_stream.eof()) {
         // TODO: class_key, class_value should come from config 
@@ -166,7 +167,7 @@ int PatternDict::Load(const std::string& dict_data_load_path) {
         value->Init(&line);
 
         if(Set(*key, *value)) {
-            std::cerr << "Load::Set key error, key input:" << line << std::endl;
+            log(LOG_ERROR, "%s:%d\ttid:%lld\tclass:PatternDict\tfunction:Load\tinfo:fail to set key %s", __FILE__, __LINE__, pthread_self(), line.c_str());
             in_stream.close();
             return 2;
         }
@@ -174,17 +175,20 @@ int PatternDict::Load(const std::string& dict_data_load_path) {
     in_stream.close();
     // Finalize
     if(Finalize()) {
-        std::cerr << "Load::Finalize  error"  << std::endl;
+        log(LOG_ERROR, "%s:%d\ttid:%lld\tclass:PatternDict\tfunction:Load\tinfo:fail to Finalize", __FILE__, __LINE__, pthread_self());
         in_stream.close();
         return 3; 
     }
+
+    log(LOG_NOTICE, "%s:%d\ttid:%lld\tclass:PatternDict\tfunction:Load\tinfo:load success dict %s", __FILE__, __LINE__, pthread_self(), dict_data_load_path.c_str());
+
     return 0;
 }
 
 int PatternDict::Dump(const std::string& dict_data_dump_path) {
     std::ofstream out_stream(dict_data_dump_path, std::ifstream::out);
     if(out_stream.is_open()) {
-        std::cerr << "error to open dump file:" << dict_data_dump_path << std::endl;
+        log(LOG_ERROR, "%s:%d\ttid:%lld\tclass:PatternDict\tfunction:Dump\tinfo:fail to dump %s", __FILE__, __LINE__, pthread_self(), dict_data_dump_path.c_str());
         return 1;
     }
     FOR_EACH(dict_info_itr, m_dict_info_read) {
@@ -208,11 +212,11 @@ int PatternDict::Finalize() {
         PrefixInfoMeta prefix_info;
         int rc = 0;
         if((rc = RePrefix(re_string, &(prefix_info.prefix))) && rc != 0) {
-            std::cerr << "RePrefix() error:" << rc << std::endl;
+            log(LOG_ERROR, "%s:%d\ttid:%lld\tclass:PatternDict\tfunction:Finalize\tinfo:fail to Finalize, rc:%s", __FILE__, __LINE__, pthread_self(), rc);
             continue;
         }
 
-        std::cout << "debug prefix:" << prefix_info.prefix << std::endl; 
+        log(LOG_DEBUG, "%s:%d\ttid:%lld\tclass:PatternDict\tfunction:Finalize\tinfo:prefix %s", __FILE__, __LINE__, pthread_self(), prefix_info.prefix.c_str());
 
         RegexInfoMeta regex_info_meta;
         regex_info_meta.regex   = re_string;
@@ -235,20 +239,21 @@ int PatternDict::Finalize() {
         }
     }
 
-    std::cout << "debug: build Trie begin" << std::endl;
+    log(LOG_DEBUG, "%s:%d\ttid:%lld\tclass:PatternDict\tfunction:Finalize\tinfo:begin to build Trie", __FILE__, __LINE__, pthread_self());
     // build trie
     int rc = 0;
     if((rc = BuildTrie()) && rc != 0) {
         std::cerr << "BuildTrie() error:" << rc << std::endl;
+        log(LOG_ERROR, "%s:%d\ttid:%lld\tclass:PatternDict\tfunction:Finalize\tinfo:BuildTrie error rc=%d", __FILE__, __LINE__, pthread_self(), rc);
         return 1;
     }
-    std::cout << "debug: build Trie end" << std::endl;
+    log(LOG_DEBUG, "%s:%d\ttid:%lld\tclass:PatternDict\tfunction:Finalize\tinfo:end to build Trie", __FILE__, __LINE__, pthread_self());
     // build dfa
     FOR_EACH(prefix_info_itr, m_prefix_info_write) {
         prefix_info_itr->BuildDfa(); 
     }
 
-    std::cout << "debug: build Dfa end" << std::endl;
+    log(LOG_DEBUG, "%s:%d\ttid:%lld\tclass:PatternDict\tfunction:Finalize\tinfo:end to build DFA", __FILE__, __LINE__, pthread_self());
     // write.swap(read) should be async
     Separation();
     return 0;
@@ -312,38 +317,38 @@ int PatternDict::BuildTrie() {
     std::sort(m_prefix_info_write.begin(), m_prefix_info_write.end());
 
     // 2. prepare keys, lengths, values
-     for(size_t i = 0; i < prefix_info_write_len; ++i) {
-         std::string prefix = m_prefix_info_write[i].prefix;
-         if(prefix.size() == 0) {
-             std::cout << "debug no good key:" << i  << std::endl;
-             continue;
-         }
-         // TODO: should remove "\" in "\.", "\$", "\{"
-         keys.push_back(prefix.c_str());
-         lengths.push_back(prefix.size());
-         if(lengths[lengths.size() - 1] == 0) {
-             std::cout << "length[i] is 0 :" << i << std::endl;
-         }
-         values.push_back(static_cast<DartsDatrie::value_type>(i));
-     }
-     std::cout << "key'size:" << keys.size() << "\tlength'size:" << lengths.size() <<"\t" << prefix_info_write_len << std::endl;
+    for(size_t i = 0; i < prefix_info_write_len; ++i) {
+        std::string prefix = m_prefix_info_write[i].prefix;
+        if(prefix.size() == 0) {
+            log(LOG_DEBUG, "%s:%d\ttid:%lld\tclass:PatternDict\tfunction:BuildTrie\tinfo:not good key %d", __FILE__, __LINE__, pthread_self(), i);
+            continue;
+        }
+        // TODO: should remove "\" in "\.", "\$", "\{"
+        keys.push_back(prefix.c_str());
+        lengths.push_back(prefix.size());
+        if(lengths[lengths.size() - 1] == 0) {
+            log(LOG_DEBUG, "%s:%d\ttid:%lld\tclass:PatternDict\tfunction:BuildTrie\tinfo:length is 0, index=%d", __FILE__, __LINE__, pthread_self(), i);
+        }
+        values.push_back(static_cast<DartsDatrie::value_type>(i));
+    }
+    log(LOG_DEBUG, "%s:%d\ttid:%lld\tclass:PatternDict\tfunction:BuildTrie\tinfo:key's size %d, length's size %d", __FILE__, __LINE__, pthread_self(), keys.size(), lengths.size());
     // 3. build darts
     if(m_darts_datrie_write == NULL) {
-        std::cerr << "darts_trie is null" << std::endl;
+        log(LOG_ERROR, "%s:%d\ttid:%lld\tclass:PatternDict\tfunction:BuildTrie\tinfo:darts_trie is null", __FILE__, __LINE__, pthread_self());
         return 2; 
     }
     try {
         int rc = 0;
-         if((rc = m_darts_datrie_write->build(
-                         keys.size(),
-                         &keys[0],
-                         &lengths[0],
-                         &values[0])) && rc != 0) {
-             std::cerr << "m_darts_datrie_write.build error" << std::endl;
-             return 1;
-         }
+        if((rc = m_darts_datrie_write->build(
+                        keys.size(),
+                        &keys[0],
+                        &lengths[0],
+                        &values[0])) && rc != 0) {
+            log(LOG_ERROR, "%s:%d\ttid:%lld\tclass:PatternDict\tfunction:BuildTrie\tinfo:m_darts_datrie_write.build ERROR", __FILE__, __LINE__, pthread_self());
+            return 1;
+        }
     }catch(const std::exception &ex) {
-        std::cerr << "exception: " << ex.what() << std::endl;  
+        log(LOG_ERROR, "%s:%d\ttid:%lld\tclass:PatternDict\tfunction:BuildTrie\tinfo:m_darts_datrie_write.build Exception %s", __FILE__, __LINE__, pthread_self(), ex.what());
         return 2;
     }
     return 0;
@@ -388,7 +393,7 @@ int PatternDict::RePrefix(const std::string& re_string, std::string* prefix) {
         }
     }
     std::string prefix_with_trope = re_string.substr(0, min_pos);
-    std::cout << "debug prefix_with_trope:" << prefix_with_trope << std::endl;
+    log(LOG_DEBUG, "%s:%d\ttid:%lld\tclass:RePrefix\tfunction:BuildTrie\tinfo:prefix_with_trope %s", __FILE__, __LINE__, pthread_self(), prefix_with_trope.c_str());
     // 3. remove trope '\'
     trope_char = "\\";
     hit_pos = 0;
@@ -405,7 +410,7 @@ int PatternDict::RePrefix(const std::string& re_string, std::string* prefix) {
         ++ hit_pos;
     }
     std::string prefix_without_trope = prefix_with_trope;
-    std::cout << "debug prefix_without_trope:" << prefix_without_trope << std::endl;
+    log(LOG_DEBUG, "%s:%d\ttid:%lld\tclass:RePrefix\tfunction:BuildTrie\tinfo:prefix_with_trope %s", __FILE__, __LINE__, pthread_self(), prefix_with_trope.c_str());
     *prefix = prefix_without_trope;
     return 0;
 }
@@ -431,7 +436,7 @@ int PatternDict::PrefixInfoMeta::BuildDfa() {
         std::string regex = regex_info_repo[i].regex;
         re2::StringPiece sp(regex.c_str(), regex.size());
         if((rc = dfa->Add(sp, NULL)) && rc == -1) {
-            std::cerr << "warning:" << regex << "\tadd into set fail" << std::endl;
+            log(LOG_WARNING, "%s:%d\ttid:%lld\tclass:PatternDict\tfunction:BuildDfa\tinfo:add into dfa::set error, regex=%s", __FILE__, __LINE__, pthread_self(), regex.c_str());
             regex_info_offline.push_back(regex_info_repo[i]);
         }
         else {
@@ -440,7 +445,7 @@ int PatternDict::PrefixInfoMeta::BuildDfa() {
     }
     // 3. compile dfa
     if(!dfa->Compile()) {
-        std::cerr << "dfa->Compile error" << std::endl;
+        log(LOG_ERROR, "%s:%d\ttid:%lld\tclass:PatternDict\tfunction:BuildDfa\tinfo:dfa->Compile Error", __FILE__, __LINE__, pthread_self());
         return 1;
     }
     return 0;

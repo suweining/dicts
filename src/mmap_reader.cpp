@@ -22,7 +22,7 @@ MmapReader::MmapReader(const char* file) : m_ptr(NULL), m_size(0), m_read_size(0
     struct stat file_stat;
     if(int rc = fstat(fd, &file_stat) && -1 == rc) {
         std::cerr << "fstat file:" << file << " error:" << strerror(errno) << std::endl; 
-        return ; 
+        return ;
     }
 
     m_size = file_stat.st_size;
@@ -62,10 +62,10 @@ int MmapReader::NextLine(std::string* line) {
 
     std::getline(m_iss, *line);
     if(m_iss.good() || m_iss.eof()) {
-        m_read_size += line->size(); 
+        m_read_size += line->size();
     }
     else {
-        return 0;    
+        return 0;
     }
     return line->size();
 }

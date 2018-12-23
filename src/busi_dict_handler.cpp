@@ -1,13 +1,14 @@
 #include "busi_dict_handler.h"
 #include "log.h"
 #include "ini.h"
+#include "util.h"
 
 CBusiDictHandler::CBusiDictHandler() : m_config_path("") {}
 
 CBusiDictHandler::CBusiDictHandler(const std::string& config) : m_config_path(config) {}
 
 CBusiDictHandler::~CBusiDictHandler() {
-    FOR_EACH(dict_repo_itr, m_dict_repo) {
+    FOR_EACH(dict_repo_itr, m_dict_level_repo) {
         CBusiDictLevel* dict_ptr = dict_repo_itr->second;
         if(NULL != dict_ptr) {
             delete dict_ptr;
@@ -42,8 +43,10 @@ int CBusiDictHandler::Load() {
     }
 
     // new BusiDictLevel
-    std::vector<std::string> level_parts = StringToToken(m_levels, false, ';');
+    std::vector<std::string> level_parts = StringToTokens(m_levels, false, ';');
     FOR_EACH(level_parts_itr, level_parts) {
+
+        log (LOG_DEBUG, "file:%s\tline:%d\ttid:%lld\tfunc:Load\tinfo:deal Level %s", __FILE__, __LINE__, pthread_self(), level_parts_itr->c_str());
 
         if(m_dict_level_repo.count(*level_parts_itr)) {
             log (LOG_WARNING, "file:%s\tline:%d\ttid:%lld\tfunc:Load\tinfo:Level %s is exist", __FILE__, __LINE__, pthread_self(), level_parts_itr->c_str());
@@ -52,13 +55,14 @@ int CBusiDictHandler::Load() {
 
         CBusiDictLevel* bdl = new CBusiDictLevel(*level_parts_itr, m_config_path);
         if(NULL == bdl || bdl->Load()) {
+            log (LOG_WARNING, "file:%s\tline:%d\ttid:%lld\tfunc:Load\tinfo:Level %s load failed", __FILE__, __LINE__, pthread_self(), level_parts_itr->c_str());
             continue;
         }
 
         m_dict_level_repo[ *level_parts_itr ] = bdl;
         log (LOG_INFO, "file:%s\tline:%d\ttid:%lld\tfunc:Load\tinfo:add Level %s, addr:%p", __FILE__, __LINE__, pthread_self(), level_parts_itr->c_str(), bdl);
     }
-
+    return 0;
 }
 
 int CBusiDictHandler::ReloadLevel(const std::string& level) {
@@ -104,7 +108,7 @@ int CBusiDictHandler::DumpLevel(const std::string& level) {
 
     CBusiDictLevel* bdl = m_dict_level_repo[level];
 
-    if(dbl->DumpLevel()) {
+    if(bdl->DumpLevel()) {
         log (LOG_ERROR, "file:%s\tline:%d\ttid:%lld\tfunc:ReloadDict\tinfo:Level %s dump all error", __FILE__, __LINE__, pthread_self(), level.c_str());
         return 2;
     }
@@ -131,7 +135,7 @@ int CBusiDictHandler::DumpDict(const std::string& level, const std::string& dict
     return 0;
 }
 
-int CBusiDictHandler::AddDict(const std::string& level, const std::string& dict_unit, const std::string& dict_path, int dict_type, bool is_blacklist) {
+int CBusiDictHandler::AddDict(const std::string& level, const std::string& dict_unit, int dict_type, const std::string& dict_path, bool is_blacklist) {
 
     if(0 == m_dict_level_repo.count(level)) {
         log (LOG_WARNING, "file:%s\tline:%d\ttid:%lld\tfunc:AddDict\tinfo:Level %s not exist", __FILE__, __LINE__, pthread_self(), level.c_str());
@@ -159,7 +163,7 @@ int CBusiDictHandler::AddKey(const std::string& level, const std::string& dict_u
 
     CBusiDictLevel* bdl = m_dict_level_repo[level];
 
-    if(bdl->AddDict(dict_unit, dict_path, dict_type, is_blacklist)) {
+    if(bdl->AddKey(dict_unit, key, value)) {
         log (LOG_ERROR, "file:%s\tline:%d\ttid:%lld\tfunc:AddKey\tinfo:Level %s add dict %s error", __FILE__, __LINE__, pthread_self(), level.c_str(), dict_unit.c_str());
         return 2;
     }
@@ -230,20 +234,20 @@ int CBusiDictHandler::Match(const std::string& level, const std::string& dict_un
 int CBusiDictHandler::MatchOrder(const std::string& level, const std::string& key, std::vector<std::string>* value) {
 
     if(0 == m_dict_level_repo.count(level)) {
-        log (log_warning, "file:%s\tline:%d\ttid:%lld\tfunc:matchorder\tinfo:level %s not exist", __file__, __line__, pthread_self(), level.c_str());
+        log (LOG_WARNING, "file:%s\tline:%d\ttid:%lld\tfunc:matchorder\tinfo:level %s not exist", __FILE__, __LINE__, pthread_self(), level.c_str());
         return 1;
     }
 
-    cbusidictlevel* bdl = m_dict_level_repo[level];
+   CBusiDictLevel* bdl = m_dict_level_repo[level];
 
     int hit = 0;
     std::string hit_dict_unit;
-    if(bdl->MatchOrder(dict_unit, key, &hit, &hit_dict_unit, value)) {
-        log (LOG_ERROR, "file:%s\tline:%d\ttid:%lld\tfunc:MatchOrder\tinfo:Level %s del dict %s error", __FILE__, __LINE__, pthread_self(), level.c_str(), dict_unit.c_str());
+    if(bdl->MatchOrder(key, &hit, &hit_dict_unit, value)) {
+        log (LOG_ERROR, "file:%s\tline:%d\ttid:%lld\tfunc:MatchOrder\tinfo:Level %s matchorder error", __FILE__, __LINE__, pthread_self(), level.c_str());
         return 2;
     }
 
-    log (LOG_NOTICE, "file:%s\tline:%d\ttid:%lld\tfunc:MatchOrder\tinfo:Level %s del dict %s success", __FILE__, __LINE__, pthread_self(), level.c_str(), dict_unit.c_str());
+    log (LOG_NOTICE, "file:%s\tline:%d\ttid:%lld\tfunc:MatchOrder\tinfo:Level %s matchorder success, value.size:%d", __FILE__, __LINE__, pthread_self(), level.c_str(), value->size());
 
     return 0;
 }
@@ -257,11 +261,11 @@ int CBusiDictHandler::Info(const std::string& level, std::map<std::string, std::
     CBusiDictLevel* bdl = m_dict_level_repo[level];
 
     if(bdl->Info(infos)) {
-        log (LOG_ERROR, "file:%s\tline:%d\ttid:%lld\tfunc:Info\tinfo:Level %s del dict %s error", __FILE__, __LINE__, pthread_self(), level.c_str(), dict_unit.c_str());
+        log (LOG_ERROR, "file:%s\tline:%d\ttid:%lld\tfunc:Info\tinfo:Level %s matchorder error", __FILE__, __LINE__, pthread_self(), level.c_str());
         return 2;
     }
 
-    log (LOG_NOTICE, "file:%s\tline:%d\ttid:%lld\tfunc:Info\tinfo:Level %s del dict %s success", __FILE__, __LINE__, pthread_self(), level.c_str(), dict_unit.c_str());
+    log (LOG_NOTICE, "file:%s\tline:%d\ttid:%lld\tfunc:Info\tinfo:Level %s matchorder success", __FILE__, __LINE__, pthread_self(), level.c_str());
 
     return 0;
 }

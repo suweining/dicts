@@ -1,4 +1,5 @@
 #include <iostream>
+#include <map>
 
 #include "gtest/gtest.h"
 #include "mmap_reader.h"
@@ -50,6 +51,17 @@ TEST(MmapReader, Reset) {
 }
 
 int main(int argc, char* argv[]) {
+
+    struct Node{
+        int index;
+        Node() {}
+        Node(int i) : index(i) {}
+        std::map<size_t, Node> child;
+    };
+
+    Node n_root;
+    n_root.index = 1;
+    n_root.child[2] = Node(4);
     testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }

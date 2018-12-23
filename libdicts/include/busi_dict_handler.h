@@ -6,9 +6,8 @@
 #include <map>
 
 #include "busi_dict_level.h"
-#include "singleton.h"
 
-class CBusiDictHandler : public Singleton<CBusiDictHandler> {
+class CBusiDictHandler {
     public:
         CBusiDictHandler();
         CBusiDictHandler(const std::string& config);
