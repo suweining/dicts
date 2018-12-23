@@ -301,8 +301,22 @@ int CAcValidTool::BuildTrieLeafPool(TrieNodeBuild* target_tnb) {
 
     // 1. first need to know how many leaf shall be contructed 
     // (because of re2::RE2::set 's copy-construct is delete)
-     
+    size_t count = 0;
+    std::queue<TrieNodeBuild*> bfs_tnb_queue;
+    bfs_tnb_queue.push(target_tnb);
+    while(!bfs_tnb_queue.empty()) {
+        TrieNodeBuild* cur_tnb = bfs_tnb_queue.front();
+        if(cur_tnb->tnb_end - cur_tnb->tnb_begin < DFA_MAX_RECORD) {
+            // build dfa 
+            ++ count;
+            continue;
+        }
+        FOR_EACH(child_tnb_itr, cur_tnb->tnb_child) {
+            bfs_tnb_queue.push(&(child_tnb_itr->second)); 
+        }
+    }
     // 2. build the default m_leaf_match_pool
+
     // 3. build m_leaf_match_pool[i]
     return 0;
 }

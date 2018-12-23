@@ -49,6 +49,7 @@ class CAcValidTool {
         size_t tnb_begin;
         size_t tnb_end;
         size_t tnb_cur; // 
+        size_t tnm_pattern_match_index;
         std::vector<size_t> tnb_index; // if leaf, then tn_index is the index of m_dict_basic_infos else is 0
         std::map<size_t, TrieNodeBuild> tnb_child; // the child
         TrieNodeBuild() :  tnb_begin(0), tnb_end(0), tnb_cur(0) {}
