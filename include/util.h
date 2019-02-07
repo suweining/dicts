@@ -9,6 +9,14 @@
 #include <vector>
 #include <string>
 
+#ifndef _UINT32
+#define _UINT32
+typedef unsigned long   uint64;
+typedef unsigned int    uint32;
+typedef unsigned short  uint16;
+typedef unsigned char   uint8;
+#endif
+
 #define FOR_EACH(it_name, container) \
     for (typeof((container).begin()) it_name = (container).begin(), \
             it_name##_end = (container).end(); \
@@ -41,5 +49,9 @@ std::string UrlEncode(const std::string& src_url);
 std::string UrlDecode(const std::string& src_url);
 
 std::string UrlPrepare(const std::string& src_url);
+
+uint64 MurmurHash64A(const void* key, int len, uint32 seed = 0x12345678);
+
+uint64 MurmurHash64A(const std::string &key);
 
 #endif /* INCLUDE_UTIL_H_ */

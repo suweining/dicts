@@ -204,7 +204,7 @@ int CBusiDictLevel::ReloadDict(const std::string& dict_unit) {
             break;
 
         case DICT_PATTERN:
-            new_dict = new PatternDict(); 
+            new_dict = new CPatternDict(); 
             break;
 
         case DICT_CONTAIN:
@@ -445,7 +445,7 @@ int CBusiDictLevel::Match(const std::string& dict_unit, const std::string& key, 
         std::string v;
         IValue* hit_value = *val_itr;
 
-        hit_value->Val((void*)&v);
+        hit_value->GetVal((void*)&v);
         values->push_back(v);
     }
     return 0;

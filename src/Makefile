@@ -2,7 +2,7 @@ CPP			= /opt/gcc-4.7.2/bin/g++
 BUILD	   ?= debug
 ifeq (debug, $(shell tr '[:upper:]' '[:lower:]' <<< $(BUILD)))
 	override BUILD = debug
-	CPPFLAGS = $(INCLUDE) -fPIC -g -std=gnu++11
+	CPPFLAGS = $(INCLUDE) -fPIC -g -std=gnu++11 
 else
 	override BUILD = release
 	CPPFLAGS = $(INCLUDE) -fPIC -O2
@@ -39,10 +39,10 @@ LIBS		=	\
 LDFLAGS		= 	$(LIBS) -lboost_thread-mt -lboost_system-mt -lre2 -Wl,-rpath=../lib -Wl,-rpath=./lib
 
 
-OBJS1		= 	ini.o ac_automachine_dict.o  ac_matcher.o util.o log.o mmap_reader.o  pattern_dict.o pattern_dict_struct_key.o pattern_dict_struct_value.o busi_dict_level.o busi_dict_handler.o main.o
+OBJS1		= 	ini.o ac_automachine_dict.o  ac_matcher.o util.o log.o mmap_reader.o  pattern_dict.o pattern_dict_struct_key.o pattern_dict_struct_value.o busi_dict_level.o busi_dict_handler.o kv_dict.o main.o
 TARGET1		= 	server
 
-OBJS2		= 	ini.o ac_automachine_dict.o  ac_matcher.o util.o log.o mmap_reader.o  pattern_dict.o pattern_dict_struct_key.o pattern_dict_struct_value.o busi_dict_level.o busi_dict_handler.o
+OBJS2		= 	ini.o ac_automachine_dict.o  ac_matcher.o util.o log.o mmap_reader.o  pattern_dict.o pattern_dict_struct_key.o pattern_dict_struct_value.o busi_dict_level.o busi_dict_handler.o kv_dict.o
 TARGET2		= 	../bin/libdicts.a
 
 TEST_OBJS1	=	unit/ac_matcher_unit.o

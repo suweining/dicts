@@ -14,17 +14,14 @@ using namespace apache::thrift::concurrency;
 
 const std::size_t DFA_MAX_MEM = 2L * 1024L * 1024L * 1024L - 1L;
 
-#define NEW_CLASS(ClassName) \
-    new #ClassName)()
-
-class PatternDict : public IDict {
+class CPatternDict : public IDict {
 
     public:
-        PatternDict();
-        PatternDict(const std::string key_class, const std::string value_class);
-        ~PatternDict();
+        CPatternDict();
+        ~CPatternDict();
 
         int Set(const IKey& key, const IValue& value);
+        int Add(const IKey& key, const IValue& value);
         int Del(const IKey& key);
         int Get(const IKey& key, std::vector<IValue*>* value);
         int Load(const std::string& dict_data_load_path);

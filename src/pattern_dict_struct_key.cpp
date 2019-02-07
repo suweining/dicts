@@ -15,16 +15,23 @@ PatternDictStructKey::~PatternDictStructKey() {
 int PatternDictStructKey::Init(const void* input) {
 
     if(NULL == input){
-        log(LOG_ERROR, "%s:%d\ttid:%lld\tclass:PatternDictStructKey\tfunction:Init\tinfo:input is NULL", __FILE__, __LINE__, pthread_self());
+        log(LOG_ERROR, "%s:%d\ttid:%lld\tclass:PatternDictStructKey\tfunction:Init\tinfo:input is NULL",
+                __FILE__,
+                __LINE__,
+                pthread_self());
         return 1;
     }
 
     std::string* input_str = (std::string*)input;
 
     if(input_str->size() == 0) {
-        log(LOG_ERROR, "%s:%d\ttid:%lld\tclass:PatternDictStructKey\tfunction:Init\tinfo:input's size is 0", __FILE__, __LINE__, pthread_self());
+        log(LOG_ERROR, "%s:%d\ttid:%lld\tclass:PatternDictStructKey\tfunction:Init\tinfo:input's size is 0",
+                __FILE__,
+                __LINE__,
+                pthread_self());
         return 1; 
     }
+
     // get pattern field
     std::string pattern_field;
     std::vector<std::string> fields = StringToTokens(*input_str, false, '\t');
@@ -36,7 +43,10 @@ int PatternDictStructKey::Init(const void* input) {
         }
     }
     if(pattern_field.size() == 0) {
-        log(LOG_ERROR, "%s:%d\ttid:%lld\tclass:PatternDictStructKey\tfunction:Init\tinfo:pattern_field's size is 0", __FILE__, __LINE__, pthread_self());
+        log(LOG_ERROR, "%s:%d\ttid:%lld\tclass:PatternDictStructKey\tfunction:Init\tinfo:pattern_field's size is 0", 
+                __FILE__,
+                __LINE__,
+                pthread_self());
         return 2; 
     }
     std::string pattern = (StringToTokens(pattern_field, false, ':', true))[1];
