@@ -21,6 +21,6 @@ class CSpiderFilterPatternKey : public IKey {
         int genKey(const std::string& key_string);
     private:
         std::string m_key;
-        std::string m_key_string;
+        std::string m_string;
 };
 #endif

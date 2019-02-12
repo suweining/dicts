@@ -1,5 +1,10 @@
+#include <vector>
+#include <string>
+
 #include "spider_filter_pattern_key.h"
 #include "log.h"
+#include "util.h"
+
 
 CSpiderFilterPatternKey::CSpiderFilterPatternKey() {
 
@@ -20,7 +25,7 @@ int CSpiderFilterPatternKey::Init(const void* input) {
         return 1;
     }
 
-    std::string* input_str = static_cast<std::string*>(input);
+    std::string* input_str = (std::string*)input;
 
     if(0 == input_str->size()) {
          log(LOG_WARNING, "%s:%d\ttid:%lld\tclass:CSpiderFilterPatternKey\tfunction:Init\tinfo:input's size is 0",
