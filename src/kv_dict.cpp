@@ -1,5 +1,6 @@
 #include <sstream>
 #include "kv_dict.h"
+#include "util.h"
 
 CKvDict::CKvDict() : m_item_count(0) {
 
@@ -82,15 +83,20 @@ int CKvDict::Get(const IKey& key, std::vector<IValue*>* value) {
         return 1;
     }
 
-    if(!m_hash_dict_engine.GetItem(key_str.c_str(), val)) {
-        return 2;
-    }
+    std::vector<std::string> key_vec = StringToTokens(key_str, false, '\t');
 
-    if(m_value_repo.size() <= val) {
-        return 3;
-    }
+    FOR_EACH(key_vec_itr, key_vec) {
 
-    value->push_back(m_value_repo[val]);
+        if(!m_hash_dict_engine.GetItem(key_vec_itr->c_str(), val)) {
+            continue;
+        }
+
+        if(m_value_repo.size() <= val) {
+            continue;
+        }
+
+        value->push_back(m_value_repo[val]);
+    }
 
     return 0;
 }
