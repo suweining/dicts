@@ -79,7 +79,48 @@ int CSpiderFilterKvKey::GetKey(void* output) const {
     if(m_key.size() <= 0) {
         return 1;
     }
-    *(std::string*)output = m_key;
+
+    // 1. check m_key is url or not 
+    bool is_url = false;
+    if(0 == m_key.find("http://")
+            || 0 == m_key.find("https://")
+            || 0 == m_key.find("ftp://")
+            || 0 == m_key.find("rtsp://")
+            || 0 == m_key.find("mms://")) {
+        is_url = true;
+    }
+
+    if(!is_url) {
+        // if m_key is url, the output shall be "url \t host \t domain"
+        *(std::string*)output = m_key;
+        return 0;
+    }
+
+    std::string candidate_key = m_key;
+    // 2. get host
+    std::vector<std::string> url_parts = StringToTokens(m_key, false, '/');
+    if(2 > url_parts.size()) {
+        *(std::string*)output = candidate_key;
+        return 0;
+    }
+
+    std::string host = url_parts[1];
+    candidate_key += "\t" + host;
+
+    // 3. get domain
+    std::vector<std::string> host_parts = StringToTokens(host, false, '.');
+    size_t host_parts_len = host_parts.size();
+
+    if(2 > host_parts_len) {
+        *(std::string*)output = candidate_key;
+        return 0;
+    }
+
+    std::string domain = host_parts[host_parts_len - 2] + "." + host_parts[host_parts_len - 1];
+    candidate_key += "\t" + domain;
+
+    // 4. return candidate_key
+    *(std::string*)output = candidate_key;
 
     return 0;
 }
@@ -90,7 +131,6 @@ int CSpiderFilterKvKey::ToString(void* output) const {
         return 1;
     }
     *(std::string*)output = m_key;
-
 
     return 0;
 }
