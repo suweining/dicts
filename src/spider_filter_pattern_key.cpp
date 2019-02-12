@@ -20,7 +20,6 @@ int CSpiderFilterPatternKey::Init(const void* input) {
         return 1;
     }
 
-
     std::string* input_str = static_cast<std::string*>(input);
 
     if(0 == input_str->size()) {
@@ -54,7 +53,10 @@ int CSpiderFilterPatternKey::Init(const void* input) {
           return 4;
     }
 
-    // 3. pattern_field is url pattern, we need reverse the host part to get m_key
+    // 3. set m_string
+    m_string = pattern_field;
+
+    // 4. pattern_field is url pattern, we need reverse the host part to set m_key
     int rc = genKey(pattern_field);
     if(0 != rc) {
             log(LOG_WARNING, "%s:%d\ttid:%lld\tclass:CSpiderFilterPatternKey\tfunction:Init\tinfo: genKey errorcode is %d",
@@ -87,7 +89,10 @@ int CSpiderFilterPatternKey::SetKey(const void* input) {
         return 2; 
     }
 
-    // 2. input_str is url pattern, we need reverse the host part to get m_key
+    // 2. set m_string
+    m_string = *input_str;
+
+    // 3. input_str is url pattern, we need reverse the host part to get m_key
     int rc = genKey(*input_str);
     if(0 != rc) {
             log(LOG_WARNING, "%s:%d\ttid:%lld\tclass:CSpiderFilterPatternKey\tfunction:SetKey\tinfo: genKey errorcode is %d",
@@ -100,16 +105,49 @@ int CSpiderFilterPatternKey::SetKey(const void* input) {
 
     return 0;
 }
+
 int CSpiderFilterPatternKey::GetKey(void* output) const {
+
+    if(m_key.size() <= 0) {
+        return 1;
+    }
+
+    *(std::string*)output = m_key;
+
     return 0;
 }
+
 int CSpiderFilterPatternKey::ToString(void* output) const {
+
+    if(m_string.size() <= 0) {
+        return 1;
+    }
+
+    *(std::string*)output = m_string;
+
     return 0;
 }
+
 int CSpiderFilterPatternKey::Compare(const IKey& key) const {
-    return 0;
+
+    std::string key_str("");
+
+    if(key.GetKey(&key_str)) {
+
+        log(LOG_ERROR, "%s:%d\ttid:%lld\tclass:PatternDictStructKey\tfunction:Compare\tinfo:get key failed",
+                __FILE__,
+                __LINE__,
+                pthread_self());
+        return 1;
+    }
+
+    return m_key.compare(key_str);
 }
+
 int CSpiderFilterPatternKey::Func(const void* input, void* output) {
+
+    // NULL
+
     return 0;
 }
 
