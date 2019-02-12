@@ -18,7 +18,7 @@ int CSpiderFilterPatternKey::Init(const void* input) {
 
     // 1. check input
     if(NULL == input){
-        log(LOG_WARNING, "%s:%d\ttid:%lld\tclass:CSpiderFilterPatternKey\tfunction:Init\tinfo:input is NULL",
+        log(LOG_INFO, "%s:%d\ttid:%lld\tclass:CSpiderFilterPatternKey\tfunction:Init\tinfo:input is NULL",
                 __FILE__,
                 __LINE__,
                 pthread_self());
@@ -28,7 +28,7 @@ int CSpiderFilterPatternKey::Init(const void* input) {
     std::string* input_str = (std::string*)input;
 
     if(0 == input_str->size()) {
-         log(LOG_WARNING, "%s:%d\ttid:%lld\tclass:CSpiderFilterPatternKey\tfunction:Init\tinfo:input's size is 0",
+         log(LOG_INFO, "%s:%d\ttid:%lld\tclass:CSpiderFilterPatternKey\tfunction:Init\tinfo:input's size is 0",
                 __FILE__,
                 __LINE__,
                 pthread_self());
@@ -40,7 +40,7 @@ int CSpiderFilterPatternKey::Init(const void* input) {
 
     std::vector<std::string> fields = StringToTokens(*input_str, false, '\t');
     if(2 > fields.size()) {
-          log(LOG_WARNING, "%s:%d\ttid:%lld\tclass:CSpiderFilterPatternKey\tfunction:Init\tinfo:input's field < 2",
+          log(LOG_INFO, "%s:%d\ttid:%lld\tclass:CSpiderFilterPatternKey\tfunction:Init\tinfo:input's field < 2",
                 __FILE__,
                 __LINE__,
                 pthread_self());
@@ -51,7 +51,7 @@ int CSpiderFilterPatternKey::Init(const void* input) {
     pattern_field = fields[0];
 
     if(0 == pattern_field.size()) {
-           log(LOG_WARNING, "%s:%d\ttid:%lld\tclass:CSpiderFilterPatternKey\tfunction:Init\tinfo:input's pattern_field is 0",
+           log(LOG_INFO, "%s:%d\ttid:%lld\tclass:CSpiderFilterPatternKey\tfunction:Init\tinfo:input's pattern_field is 0",
                 __FILE__,
                 __LINE__,
                 pthread_self());
@@ -64,7 +64,7 @@ int CSpiderFilterPatternKey::Init(const void* input) {
     // 4. pattern_field is url pattern, we need reverse the host part to set m_key
     int rc = genKey(pattern_field);
     if(0 != rc) {
-            log(LOG_WARNING, "%s:%d\ttid:%lld\tclass:CSpiderFilterPatternKey\tfunction:Init\tinfo: genKey errorcode is %d",
+            log(LOG_INFO, "%s:%d\ttid:%lld\tclass:CSpiderFilterPatternKey\tfunction:Init\tinfo: genKey errorcode is %d",
                 __FILE__,
                 __LINE__,
                 pthread_self(),
