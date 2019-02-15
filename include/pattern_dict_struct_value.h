@@ -15,7 +15,8 @@ class PatternDictStructValue : public IValue {
         ~PatternDictStructValue();
 
         int Init(const void* input);
-        int Val(void* output);
+        int GetVal(void* output);
+        int SetVal(const void* input);
         int ToString(void* output);
         int Compare(const IValue& v);
         int Func(const void* input, void* output);
