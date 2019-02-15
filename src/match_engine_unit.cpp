@@ -172,6 +172,11 @@ int CMatchEngineUnit::Del(const std::string& key){
 }
 
 int CMatchEngineUnit::Get(const std::string& key, std::vector<std::string>* value){
+
+    if(NULL == value) {
+        return 0; 
+    }
+
     IKey* key_ptr = CKeyFactory::GetInstance()->GenKeyInstance(m_key_type);
     if(key_ptr->SetKey(&key)) {
         return 1;
