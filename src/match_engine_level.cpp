@@ -84,48 +84,149 @@ int CMatchEngineLevel::Init(){
 
 int CMatchEngineLevel::Load(){
     // read dict: m_engine_pool
+    FOR_EACH(level_pool_itr, m_level_pool) {
+        std::vector<std::string>& engine_vec = level_pool_itr->second;
+        FOR_EACH(engine_vec_itr, engine_vec) {
+
+            std::string engine = *engine_vec_itr;
+
+            CMatchEngineUnit* match_engine_unit_ptr = new CMatchEngineUnit(m_config, engine);
+            if(match_engine_unit_ptr->Init()
+                    || match_engine_unit_ptr->Load()) {
+                log (LOG_WARNING, "file:%s\tline:%d\ttid:%lld\t\tclass:CMatchEngineLevel\tfunc:ReadConfig\tinfo:load engine %s failed",
+                        __FILE__,
+                        __LINE__,
+                        engine.c_str());
+                continue;
+            }
+            m_engine_pool[engine] = match_engine_unit_ptr;
+        }
+    }
     return 0;
 }
 
 int CMatchEngineLevel::Reload() {
     // reload all
+    FOR_EACH(level_pool_itr, m_level_pool) {
+        std::vector<std::string>& engine_vec = level_pool_itr->second;
+        FOR_EACH(engine_vec_itr, engine_vec) {
 
+            std::string engine = engine_vec_itr;
+            Reload(engine);
+        }
+    }
+    return 0;
 }
 
 int CMatchEngineLevel::Reload(const std::string& engine){
 
+    CMatchEngineUnit* match_engine_unit_ptr = m_engine_pool[engine];
+    if(match_engine_unit_ptr->Reload()) {
+        log (LOG_WARNING, "file:%s\tline:%d\ttid:%lld\t\tclass:CMatchEngineLevel\tfunc:ReadConfig\tinfo:reload engine %s failed",
+                __FILE__,
+                __LINE__,
+                engine.c_str());
+
+        return 1;
+    }
+    return 0;
 }
 
 int CMatchEngineLevel::Dump() {
 
+    FOR_EACH(level_pool_itr, m_level_pool) {
+        std::vector<std::string>& engine_vec = level_pool_itr->second;
+        FOR_EACH(engine_vec_itr, engine_vec) {
+
+            std::string engine = engine_vec_itr;
+            Dump(engine);
+        }
+    }
+    return 0;
 }
 
 int CMatchEngineLevel::Dump(const std::string& engine){
 
+    CMatchEngineUnit* match_engine_unit_ptr = m_engine_pool[engine];
+    if(match_engine_unit_ptr->Dump()) {
+        log (LOG_WARNING, "file:%s\tline:%d\ttid:%lld\t\tclass:CMatchEngineLevel\tfunc:ReadConfig\tinfo:dump engine %s failed",
+                __FILE__,
+                __LINE__,
+                engine.c_str());
+
+        return 1;
+    }
+    return 0;
 }
 
 int CMatchEngineLevel::Set(const std::string& engine, const std::string& key, const std::string& value){
+    CMatchEngineUnit* match_engine_unit_ptr = m_engine_pool[engine];
+    if(match_engine_unit_ptr->Set(key, value)) {
+        log (LOG_WARNING, "file:%s\tline:%d\ttid:%lld\t\tclass:CMatchEngineLevel\tfunc:ReadConfig\tinfo:set engine %s failed",
+                __FILE__,
+                __LINE__,
+                engine.c_str());
+
+        return 1;
+    }
+    return 0;
 
 }
 
 int CMatchEngineLevel::Add(const std::string& engine, const std::string& key, const std::string& value){
 
+    CMatchEngineUnit* match_engine_unit_ptr = m_engine_pool[engine];
+    if(match_engine_unit_ptr->Add(key, value)) {
+        log (LOG_WARNING, "file:%s\tline:%d\ttid:%lld\t\tclass:CMatchEngineLevel\tfunc:ReadConfig\tinfo:Add engine %s failed",
+                __FILE__,
+                __LINE__,
+                engine.c_str());
+
+        return 1;
+    }
+    return 0;
 }
 
 int CMatchEngineLevel::Del(const std::string& engine, const std::string& key){
+    CMatchEngineUnit* match_engine_unit_ptr = m_engine_pool[engine];
+
+    if(match_engine_unit_ptr->Del(key)) {
+        log (LOG_WARNING, "file:%s\tline:%d\ttid:%lld\t\tclass:CMatchEngineLevel\tfunc:ReadConfig\tinfo:Add engine %s failed",
+                __FILE__,
+                __LINE__,
+                engine.c_str());
+        return 1;
+    }
+    return 0;
 
 }
 
 int CMatchEngineLevel::GetEngine(const std::string& engine, const std::string& key, std::vector<std::string>* value){
+    CMatchEngineUnit* match_engine_unit_ptr = m_engine_pool[engine];
+
+    if(match_engine_unit_ptr->Get(key, value)) {
+        log (LOG_WARNING, "file:%s\tline:%d\ttid:%lld\t\tclass:CMatchEngineLevel\tfunc:ReadConfig\tinfo:Get engine %s failed",
+                __FILE__,
+                __LINE__,
+                engine.c_str());
+        return 1;
+    }
+    return 0;
+
 
 }
 
 int CMatchEngineLevel::GetLevel(const std::string& level, const std::string& key, std::vector<std::string>* value){
-
+    std::vector<std::string>& engine_vec = m_level_pool[level];
+    FOR_EACH(engine_vec_itr, engine_vec) {
+        GetEngine(*engine_vec_itr, key, value);
+    }
+    return 0;
 }
 
 int CMatchEngineLevel::GetSpec(const std::string& spec, const std::string& key, std::vector<std::string>* value){
-
+    FOR_EACH(spec_itr, spec) {
+        GetEngine(*spec_itr, key, value);
+    }
+    return 0;
 }
-
-
