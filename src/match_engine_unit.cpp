@@ -1,5 +1,7 @@
 #include <fstream>
 #include "match_engine_unit.h"
+#include "key_factory.h"
+#include "value_factory.h"
 #include "log.h"
 #include "util.h"
 #include "ini.h"
@@ -79,6 +81,11 @@ int CMatchEngineUnit::Reload(const std::string& load_path){
         IValue* value_ptr = CValueFactory::GetInstance()->GenValueInstance(m_value_type);
 
         if(key_ptr->Init(&line) || value_ptr->Init(&line)) {
+            log(LOG_INFO, "%s:%d\ttid:%lld\tclass:CMatchEngineUnit\tfunction:Load\tinfo:key or value init fail",
+                    __FILE__,
+                    __LINE__,
+                    pthread_self());
+
             continue;
         }
 

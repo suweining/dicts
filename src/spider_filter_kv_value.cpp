@@ -110,6 +110,7 @@ int CSpiderFilterKvValue::Compare(const IValue& v) {
 }
 
 int CSpiderFilterKvValue::Func(const void* input, void* output) {
+
     return 0;
 }
 
