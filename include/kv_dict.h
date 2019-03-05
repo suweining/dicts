@@ -1,6 +1,8 @@
 #ifndef __DICTS_KV_DICT__
 #define __DICTS_KV_DICT__
 
+#include <string>
+#include <vector>
 #include "dict.h"
 #include "hash_dict.h"
 
@@ -25,8 +27,28 @@ class CKvDict : public IDict {
 
         #define VALUE_TYPE int64_t 
 
+        struct Record {
+            IKey*   key;
+            IValue* value;
+            Record() : key(NULL), value(NULL) {
+            
+            }
+            ~Record() {
+                if(NULL != key) {
+                    delete key;
+                    key = NULL;
+                } 
+
+                if(NULL != value) {
+                    delete value;
+                    value = NULL;
+                }
+            }
+        };
+
         HashDict<VALUE_TYPE>            m_hash_dict_engine;
-        vector<IValue*>                 m_value_repo;
+        vector<Record*>                  m_record_repo;
         size_t                          m_item_count;
+        size_t                          m_hash_capacity_init;
 };
 #endif

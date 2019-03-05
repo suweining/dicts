@@ -44,6 +44,13 @@ int CSpiderFilterKvKey::Init(const void* input) {
     }
 
     m_key = fields[0];
+    m_key_build_dict = fields[0];
+
+    log(LOG_DEBUG, "%s:%d\ttid:%lld\tclass:CSpiderFilterKvKey\tfunction:Init\tinfo:init success key=%s",
+            __FILE__,
+            __LINE__,
+            pthread_self(),
+            m_key_build_dict.c_str());
 
     return 0;
 }
@@ -70,35 +77,92 @@ int CSpiderFilterKvKey::SetKey(const void* input) {
 
     // 2. set m_key
     m_key = *input_str;
+    m_key_query_dict = *input_str;
+    m_key_build_dict.clear();
 
     return 0;
 }
 
 int CSpiderFilterKvKey::GetKey(void* output) const {
+    if(0 != m_key_build_dict.size()) {
+        return GetKeyBuildDict(output);
+    }
+    else {
+        return GetKeyQueryDict(output);
+    }
+    return 0;
+}
+
+int CSpiderFilterKvKey::ToString(void* output) const {
 
     if(m_key.size() <= 0) {
         return 1;
     }
+    *(std::string*)output = m_key;
 
-    // 1. check m_key is url or not 
+    return 0;
+}
+
+int CSpiderFilterKvKey::Compare(const IKey& key) const {
+    return 0;
+}
+
+int CSpiderFilterKvKey::Func(const void* input, void* output) {
+    return 0;
+}
+
+int CSpiderFilterKvKey::GetKeyBuildDict(void* output) const {
+
+    std::string target_key_str;
+    if(0 == m_key_query_dict.size()) {
+        target_key_str = m_key_build_dict;
+    }
+    else {
+        target_key_str = m_key_query_dict;
+    }
+
+    if(target_key_str.size() <= 0) {
+        return 1;
+    }
+
+    *(std::string*)output = target_key_str;
+
+    return 0;
+}
+
+int CSpiderFilterKvKey::GetKeyQueryDict(void* output) const {
+    std::string target_key_str;
+    if(0 == m_key_query_dict.size()) {
+        target_key_str = m_key_build_dict;
+    }
+    else {
+        target_key_str = m_key_query_dict;
+    }
+
+    if(target_key_str.size() <= 0) {
+        return 1;
+    }
+
+    // 1. check target_key_str is url or not 
     bool is_url = false;
-    if(0 == m_key.find("http://")
-            || 0 == m_key.find("https://")
-            || 0 == m_key.find("ftp://")
-            || 0 == m_key.find("rtsp://")
-            || 0 == m_key.find("mms://")) {
+    if(0 == target_key_str.find("http://")
+            || 0 == target_key_str.find("https://")
+            || 0 == target_key_str.find("ftp://")
+            || 0 == target_key_str.find("rtsp://")
+            || 0 == target_key_str.find("mms://")) {
         is_url = true;
     }
 
     if(!is_url) {
-        // if m_key is url, the output shall be "url \t host \t domain"
-        *(std::string*)output = m_key;
+        // if target_key_str is url, the output shall be "url \t host \t domain"
+        *(std::string*)output = target_key_str;
         return 0;
     }
 
-    std::string candidate_key = m_key;
+    std::string candidate_key = target_key_str;
+
     // 2. get host
-    std::vector<std::string> url_parts = StringToTokens(m_key, false, '/');
+    std::vector<std::string> url_parts = StringToTokens(target_key_str, false, '/');
     if(2 > url_parts.size()) {
         *(std::string*)output = candidate_key;
         return 0;
@@ -124,23 +188,3 @@ int CSpiderFilterKvKey::GetKey(void* output) const {
 
     return 0;
 }
-
-int CSpiderFilterKvKey::ToString(void* output) const {
-
-    if(m_key.size() <= 0) {
-        return 1;
-    }
-    *(std::string*)output = m_key;
-
-    return 0;
-}
-
-int CSpiderFilterKvKey::Compare(const IKey& key) const {
-    return 0;
-}
-
-int CSpiderFilterKvKey::Func(const void* input, void* output) {
-    return 0;
-}
-
-

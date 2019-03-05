@@ -1,4 +1,6 @@
 #include "key_factory.h"
+#include "spider_filter_kv_key.h"
+#include "spider_filter_pattern_key.h"
 
 CKeyFactory::CKeyFactory() {
 
@@ -26,7 +28,7 @@ IKey* CKeyFactory::GenKeyInstance(const std::string& type) {
 
     NEW_KEY_CLASS(CSpiderFilterKvKey)
 
-    NEW_KEY_CLASS(CSpiderFilterKvKey)
+    NEW_KEY_CLASS(CSpiderFilterPatternKey)
 
     return NULL;
 }

@@ -1,9 +1,9 @@
 #ifndef __DICTS_VALUE_FACTORY__
 #define __DICTS_VALUE_FACTORY__
 
-#include "Singleton.h"
+#include <string>
+#include "singleton.h"
 #include "value.h"
-#include <string.h>
 
 class CValueFactory : public Singleton<CValueFactory> {
     public:

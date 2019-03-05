@@ -8,7 +8,7 @@ else
 	CPPFLAGS = $(INCLUDE) -fPIC -O2
 endif
 
-HOME		=	/home/suweining/workplace/dicts
+HOME		=	/home/suweining/workplace/tmp/dicts
 THIRD_PARTY	=	$(HOME)/third_party
 LIB_GTEST	=	$(THIRD_PARTY)/gtest-1.7.0
 LIB_AHOCORASICK	= 	$(THIRD_PARTY)/ahocorasick
@@ -28,7 +28,6 @@ INCLUDE		=	\
 LIBS		=	\
 			-L$(HOME)/lib \
 			-L$(LIB_RE)/lib \
-			$(HOME)/libdicts/lib/libdicts.a \
 			$(LIB_AHOCORASICK)/lib/libahocorasick.a \
 			$(LIB_GTEST)/lib/libgtest.a \
 			$(LIB_THRIFT)/lib/libthrift.a \
@@ -36,14 +35,14 @@ LIBS		=	\
 			$(LIB_RAPIDJSON)/lib4c/librapidjson.a \
 
 
-LDFLAGS		= 	$(LIBS) -lboost_thread-mt -lboost_system-mt -lre2 -Wl,-rpath=../lib -Wl,-rpath=./lib
+LDFLAGS		= 	$(LIBS) -lre2 -Wl,-rpath=../lib -Wl,-rpath=./lib
 
 
-OBJS1		= 	ini.o ac_automachine_dict.o  ac_matcher.o util.o log.o mmap_reader.o  pattern_dict.o pattern_dict_struct_key.o pattern_dict_struct_value.o busi_dict_level.o busi_dict_handler.o kv_dict.o main.o
-TARGET1		= 	server
+OBJS1		= 	ini.o  util.o log.o mmap_reader.o  pattern_dict.o spider_filter_pattern_key.o spider_filter_pattern_value.o spider_filter_kv_key.o spider_filter_kv_value.o  kv_dict.o dict_factory.o key_factory.o value_factory.o match_engine_unit.o match_engine_level.o
+TARGET1		= 	../bin/libdicts.a
 
-OBJS2		= 	ini.o ac_automachine_dict.o  ac_matcher.o util.o log.o mmap_reader.o  pattern_dict.o pattern_dict_struct_key.o pattern_dict_struct_value.o busi_dict_level.o busi_dict_handler.o kv_dict.o
-TARGET2		= 	../bin/libdicts.a
+OBJS2		= 	function_test.o
+TARGET2		= 	../bin/function_test
 
 TEST_OBJS1	=	unit/ac_matcher_unit.o
 TEST_EXE1	=	unit/ac_matcher_unit
@@ -59,22 +58,21 @@ TEST_EXE4	=	unit/dict_handler_unit
 
 
 
-ALL_TEST	=	$(TEST_EXE1)  $(TEST_EXE2) $(TEST_EXE3) $(TEST_EXE4)
+#ALL_TEST	=	$(TEST_EXE1)  $(TEST_EXE2) $(TEST_EXE4)
 ALL_TARGETS	= 	$(TARGET1) $(TARGET2)
 
 all: $(ALL_TARGETS)
 
-test: $(ALL_TEST)
+#test: $(ALL_TEST)
 
 .cpp.o:
 	$(CPP) $(CPPFLAGS) -c $< -o $@
 
 $(TARGET1): $(OBJS1)
-	$(CPP) -o $@ $^ $(LDFLAGS)
+	ar cr $(TARGET1) $(OBJS1)
 
 $(TARGET2): $(OBJS2)
-	ar cr $(TARGET2) $(OBJS2)
-
+	$(CPP) -o $@ $^ ../bin/libdicts.a $(LDFLAGS) 
 
 $(TEST_EXE1): $(TEST_OBJS1)
 	$(CPP) -o $@ $^ $(LDFLAGS)
@@ -93,4 +91,4 @@ $(TEST_EXE4):$(TEST_OBJS4)
 
 .PHONY: clean
 clean:
-	rm -f $(HOME)/src/*.o $(HOME)/$(ALL_TARGETS) $(HOME)/$(ALL_TEST) $(TARGET2)
+	rm -f $(HOME)/src/*.o $(HOME)/$(ALL_TARGETS)  $(TARGET2) #$(HOME)/$(ALL_TEST)

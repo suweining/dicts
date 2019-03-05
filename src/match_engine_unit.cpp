@@ -1,7 +1,10 @@
 #include <fstream>
+#include <string.h>
 #include "match_engine_unit.h"
+#include "dict_factory.h"
 #include "key_factory.h"
 #include "value_factory.h"
+#include "dict.h"
 #include "log.h"
 #include "util.h"
 #include "ini.h"
@@ -10,8 +13,13 @@ CMatchEngineUnit::CMatchEngineUnit() {
 
 }
 
-CMatchEngineUnit::CMatchEngineUnit(const std::string& config, const std::string& engine) : m_config(config), m_dict_type(engine) {
-
+CMatchEngineUnit::CMatchEngineUnit(const std::string& config, const std::string& engine) : m_config(config), m_engine(engine) {
+    log (LOG_WARNING, "file:%s\tline:%d\ttid:%lld\t\tclass:CMatchEngineUnit\tfunc:Construct\tinfo:config=%s, dict_type=%s",
+            __FILE__,
+            __LINE__,
+            pthread_self(),
+            m_config.c_str(),
+            m_engine.c_str());
 }
 
 CMatchEngineUnit::~CMatchEngineUnit() {
@@ -66,7 +74,7 @@ int CMatchEngineUnit::Reload(const std::string& load_path){
     // 1. read load_path
     std::ifstream in_stream(load_path.c_str(), std::ifstream::in);
     if(!in_stream.is_open()) {
-        log(LOG_ERROR, "%s:%d\ttid:%lld\tclass:CMatchEngineUnit\tfunction:Load\tinfo:fail to open %s",
+        log(LOG_WARNING, "%s:%d\ttid:%lld\tCMatchEngineUnit::ReLoad fail to open:%s",
                 __FILE__,
                 __LINE__,
                 pthread_self(),
@@ -80,18 +88,33 @@ int CMatchEngineUnit::Reload(const std::string& load_path){
         IKey* key_ptr = CKeyFactory::GetInstance()->GenKeyInstance(m_key_type);
         IValue* value_ptr = CValueFactory::GetInstance()->GenValueInstance(m_value_type);
 
+
+        log (LOG_DEBUG, "file:%s\tline:%d\ttid:%lld\tCMatchEngineUnit::ReLoad readline:%s",
+                __FILE__,
+                __LINE__,
+                pthread_self(),
+                line.c_str());
+
+
         if(key_ptr->Init(&line) || value_ptr->Init(&line)) {
-            log(LOG_INFO, "%s:%d\ttid:%lld\tclass:CMatchEngineUnit\tfunction:Load\tinfo:key or value init fail",
+            log(LOG_INFO, "%s:%d\ttid:%lld\tCMatchEngineUnit::ReLoad key or value init fail, and line:%s",
                     __FILE__,
                     __LINE__,
-                    pthread_self());
+                    pthread_self(),
+                    line.c_str());
 
             continue;
         }
 
+        log(LOG_DEBUG, "%s:%d\ttid:%lld\tCMatchEngineUnit::ReLoad init key and value success line:%s",
+                __FILE__,
+                __LINE__,
+                pthread_self(),
+                line.c_str());
+
         // 4. add to dict
-        if(NULL == m_dict || m_dict->Add(*key, *value)) {
-            log(LOG_INFO, "%s:%d\ttid:%lld\tclass:CMatchEngineUnit\tfunction:Load\tinfo:fail to add key %s",
+        if(NULL == m_dict || m_dict->Add(*key_ptr, *value_ptr)) {
+            log(LOG_INFO, "%s:%d\ttid:%lld\tCMatchEngineUnit::ReLoad fail to add:%s",
                     __FILE__,
                     __LINE__,
                     pthread_self(),
@@ -103,18 +126,18 @@ int CMatchEngineUnit::Reload(const std::string& load_path){
 
     // Finalize
     if(NULL == m_dict || m_dict->Finalize()) {
-        log(LOG_ERROR, "%s:%d\ttid:%lld\tclass:CMatchEngineUnit\tfunction:Load\tinfo:fail to Finalize",
+        log(LOG_WARNING, "%s:%d\ttid:%lld\tclass:CMatchEngineUnit\tfunction:Load\tinfo:fail to Finalize",
                 __FILE__,
                 __LINE__,
                 pthread_self());
         return 3; 
     }
 
-    log(LOG_NOTICE, "%s:%d\ttid:%lld\tclass:CMatchEngineUnit\tfunction:Load\tinfo:load success dict %s",
+    log(LOG_NOTICE, "%s:%d\ttid:%lld\tCMatchEngineUnit::ReLoad load success dict:%s",
             __FILE__,
             __LINE__,
             pthread_self(),
-            dict_data_load_path.c_str());
+            load_path.c_str());
 
     return 0;
 }
@@ -126,6 +149,13 @@ int CMatchEngineUnit::Dump() {
     return 1;
 }
 int CMatchEngineUnit::Dump(const std::string& dump_path) {
+
+    log (LOG_DEBUG, "file:%s\tline:%d\ttid:%lld\tCMatchEngineUnit::Dump dump.path:%s",
+            __FILE__,
+            __LINE__,
+            pthread_self(),
+            dump_path.c_str());
+
 
     if(NULL == m_dict || m_dict->Dump(dump_path)) {
         return 1;
@@ -196,7 +226,7 @@ int CMatchEngineUnit::Get(const std::string& key, std::vector<std::string>* valu
 
     FOR_EACH(hit_value_vec_itr, hit_value_vec) {
         std::string value_str;
-        if(hit_value_vec_itr->GetVal(&value_str)) {
+        if((*hit_value_vec_itr)->GetVal(&value_str)) {
             continue;
         }
         value->push_back(value_str);

@@ -1,6 +1,8 @@
 #ifndef __DICTS_KEY_FACTORY__
 #define __DICTS_KEY_FACTORY__
 
+#include <string>
+#include <vector>
 #include "singleton.h"
 #include "key.h"
 

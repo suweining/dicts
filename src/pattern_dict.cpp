@@ -43,7 +43,7 @@ int CPatternDict::Add(const IKey& key, const IValue& value) {
     }
 
     // check in m_dict_info or not
-    auto key_itr =  m_dict_info_write.end();
+    auto key_itr = m_dict_info_write.end();
     FOR_EACH(itr, m_dict_info_write) {
         if(*itr == key) {
             key_itr = itr; 

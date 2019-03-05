@@ -1,16 +1,17 @@
-CPP			= /opt/gcc-4.7.2/bin/g++
+CPP		= 	/opt/gcc-4.7.2/bin/g++
+DICT_VERSION	=	v.1.0.0
+PACKAGE_NAME	=	match_engine_$(DICT_VERSION)
 
 all:
 	$(MAKE) -C src
 clean:
-	$(MAKE) -C src
-
-
-DICT_VERSION	=	v.1.0.0
-PACKAGE_NAME	=	dict_server-$(DICT_VERSION)
-TARGETS		=	./src/server
+	$(MAKE) clean -C src
+	rm -rf packages $(PACKAGE_NAME).tgz
 
 install:
+
+	$(MAKE) -C src
+
 	rm -rf packages/$(PACKAGE_NAME)
 	rm -rf packages/$(PACKAGE_NAME).tgz
 
@@ -18,15 +19,17 @@ install:
 	/usr/bin/install -c -d packages/$(PACKAGE_NAME)/lib
 	/usr/bin/install -c -d packages/$(PACKAGE_NAME)/config
 	/usr/bin/install -c -d packages/$(PACKAGE_NAME)/data
-	/usr/bin/install -c -d packages/$(PACKAGE_NAME)/proc
 	/usr/bin/install -c -d packages/$(PACKAGE_NAME)/logs
 
 
-	mv $(TARGETS)  packages/$(PACKAGE_NAME)/bin
-	cp config/config.ini packages/$(PACKAGE_NAME)/config
+	cp -r bin/*  packages/$(PACKAGE_NAME)/bin
+	cp -r config/* packages/$(PACKAGE_NAME)/config
+	cp -r data/* packages/$(PACKAGE_NAME)/data
+	cp -r lib/* packages/$(PACKAGE_NAME)/lib
 
 	find packages/$(PACKAGE_NAME) -name ".git" | xargs rm -rf
-	find packages/$(PACKAGE_NAME) -type l|xargs rm -rf
+	find packages/$(PACKAGE_NAME) -name ".svn" | xargs rm -rf
+	find packages/$(PACKAGE_NAME) -type l | xargs rm -rf
 
 package: clean all install
 	tar zcf packages/$(PACKAGE_NAME).tgz -C packages $(PACKAGE_NAME)

@@ -1,13 +1,19 @@
+#include <string>
 #include "match_engine_level.h"
 #include "util.h"
 #include "log.h"
+#include "ini.h"
 
 CMatchEngineLevel::CMatchEngineLevel(){
 
 }
 
 CMatchEngineLevel::CMatchEngineLevel(const std::string& config) : m_config(config) {
-
+    log (LOG_DEBUG, "file:%s\tline:%d\ttid:%lld\t\tclass:CMatchEngineLevel\tfunc:Construct\tinfo:m_config is %s",
+            __FILE__,
+            __LINE__,
+            pthread_self(),
+            m_config.c_str());
 }
 
 CMatchEngineLevel::~CMatchEngineLevel(){
@@ -35,10 +41,11 @@ int CMatchEngineLevel::Init(){
     // 1. open config file
     INI* ini_reader = ini_init(m_config.c_str());
     if(NULL == ini_reader) {
-        log (LOG_WARNING, "file:%s\tline:%d\ttid:%lld\t\tclass:CMatchEngineLevel\tfunc:Init\tinfo:open m_config failed",
+        log (LOG_WARNING, "file:%s\tline:%d\ttid:%lld\t\tclass:CMatchEngineLevel\tfunc:Init\tinfo:open m_config[%s] failed",
                 __FILE__,
                 __LINE__,
-                pthread_self());
+                pthread_self(),
+                m_config.c_str());
         return 1;
     }
 
@@ -48,6 +55,11 @@ int CMatchEngineLevel::Init(){
 
     if(NULL != (read_iterm = ini_read(ini_reader, "Level", "levels"))) {
         levels = read_iterm;
+        log (LOG_DEBUG, "file:%s\tline:%d\ttid:%lld\t\tclass:CMatchEngineLevel\tfunc:ReadConfig\tinfo:Level=%s",
+                __FILE__,
+                __LINE__,
+                pthread_self(),
+                read_iterm);
     }
     else {
         log (LOG_WARNING, "file:%s\tline:%d\ttid:%lld\t\tclass:CMatchEngineLevel\tfunc:ReadConfig\tinfo:Level has no levels",
@@ -64,6 +76,12 @@ int CMatchEngineLevel::Init(){
         std::string engines;
         if(NULL != (read_iterm = ini_read(ini_reader, "Level", level_vec_itr->c_str()))) {
             engines = read_iterm;
+            log (LOG_DEBUG, "file:%s\tline:%d\ttid:%lld\t\tclass:CMatchEngineLevel\tfunc:ReadConfig\tinfo:%s=%s",
+                __FILE__,
+                __LINE__,
+                pthread_self(),
+                level_vec_itr->c_str(),
+                read_iterm);
         }
         else {
             log (LOG_WARNING, "file:%s\tline:%d\ttid:%lld\t\tclass:CMatchEngineLevel\tfunc:ReadConfig\tinfo:Level's %s has no engines",
@@ -90,12 +108,19 @@ int CMatchEngineLevel::Load(){
 
             std::string engine = *engine_vec_itr;
 
+            log (LOG_DEBUG, "file:%s\tline:%d\ttid:%lld\t\tclass:CMatchEngineLevel\tfunc:Load\tinfo:begin to load %s",
+                __FILE__,
+                __LINE__,
+                pthread_self(),
+                engine.c_str());
+
             CMatchEngineUnit* match_engine_unit_ptr = new CMatchEngineUnit(m_config, engine);
             if(match_engine_unit_ptr->Init()
                     || match_engine_unit_ptr->Load()) {
                 log (LOG_WARNING, "file:%s\tline:%d\ttid:%lld\t\tclass:CMatchEngineLevel\tfunc:ReadConfig\tinfo:load engine %s failed",
                         __FILE__,
                         __LINE__,
+                        pthread_self(),
                         engine.c_str());
                 continue;
             }
@@ -111,7 +136,7 @@ int CMatchEngineLevel::Reload() {
         std::vector<std::string>& engine_vec = level_pool_itr->second;
         FOR_EACH(engine_vec_itr, engine_vec) {
 
-            std::string engine = engine_vec_itr;
+            std::string engine = *engine_vec_itr;
             Reload(engine);
         }
     }
@@ -125,6 +150,7 @@ int CMatchEngineLevel::Reload(const std::string& engine){
         log (LOG_WARNING, "file:%s\tline:%d\ttid:%lld\t\tclass:CMatchEngineLevel\tfunc:ReadConfig\tinfo:reload engine %s failed",
                 __FILE__,
                 __LINE__,
+                pthread_self(),
                 engine.c_str());
 
         return 1;
@@ -134,13 +160,19 @@ int CMatchEngineLevel::Reload(const std::string& engine){
 
 int CMatchEngineLevel::Dump() {
 
+    log (LOG_DEBUG, "file:%s\tline:%d\ttid:%lld\tCMatchEngineLevel::Dump begin",
+            __FILE__,
+            __LINE__,
+            pthread_self());
+
+
     FOR_EACH(level_pool_itr, m_level_pool) {
         std::vector<std::string>& engine_vec = level_pool_itr->second;
         FOR_EACH(engine_vec_itr, engine_vec) {
 
-            std::string engine = engine_vec_itr;
+            std::string engine = *engine_vec_itr;
             Dump(engine);
-        }
+       }
     }
     return 0;
 }
@@ -149,9 +181,10 @@ int CMatchEngineLevel::Dump(const std::string& engine){
 
     CMatchEngineUnit* match_engine_unit_ptr = m_engine_pool[engine];
     if(match_engine_unit_ptr->Dump()) {
-        log (LOG_WARNING, "file:%s\tline:%d\ttid:%lld\t\tclass:CMatchEngineLevel\tfunc:ReadConfig\tinfo:dump engine %s failed",
+        log (LOG_WARNING, "file:%s\tline:%d\ttid:%lld\tCMatchEngineLevel::Dump dump engine %s failed",
                 __FILE__,
                 __LINE__,
+                pthread_self(),
                 engine.c_str());
 
         return 1;
@@ -212,8 +245,6 @@ int CMatchEngineLevel::GetEngine(const std::string& engine, const std::string& k
         return 1;
     }
     return 0;
-
-
 }
 
 int CMatchEngineLevel::GetLevel(const std::string& level, const std::string& key, std::vector<std::string>* value){
@@ -225,7 +256,8 @@ int CMatchEngineLevel::GetLevel(const std::string& level, const std::string& key
 }
 
 int CMatchEngineLevel::GetSpec(const std::string& spec, const std::string& key, std::vector<std::string>* value){
-    FOR_EACH(spec_itr, spec) {
+    std::vector<std::string> spec_vec = StringToTokens(spec, false, ';');
+    FOR_EACH(spec_itr, spec_vec) {
         GetEngine(*spec_itr, key, value);
     }
     return 0;

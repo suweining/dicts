@@ -46,6 +46,11 @@ int CSpiderFilterKvValue::Init(const void* input) {
 
     m_string += m_fields[fields_len - 1];
 
+    log(LOG_DEBUG, "%s:%d\ttid:%lld\tclass:CSpiderFilterKvValue\tfunction:Init\tinfo:success init val=%s",
+            __FILE__,
+            __LINE__,
+            pthread_self(),
+            m_string.c_str());
 
     return 0;
 }
