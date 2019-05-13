@@ -1,6 +1,8 @@
+#include <string>
 #include "key_factory.h"
 #include "spider_filter_kv_key.h"
 #include "spider_filter_pattern_key.h"
+#include "log.h"
 
 CKeyFactory::CKeyFactory() {
 
@@ -26,9 +28,19 @@ IKey* CKeyFactory::GenKeyInstance(const std::string& type) {
     if(type == #TARGET_CLASS) \
         return new TARGET_CLASS();
 
-    NEW_KEY_CLASS(CSpiderFilterKvKey)
+    log (LOG_DEBUG, "file:%s\tline:%d\ttid:%lld\t\tclass:CKeyFactory::GenDictInstance type=%s",
+                __FILE__,
+                __LINE__,
+                pthread_self(),
+                type.c_str());
 
-    NEW_KEY_CLASS(CSpiderFilterPatternKey)
+    if(type == "CSpiderFilterKvKey") {
+        return new CSpiderFilterKvKey();
+    }
+
+    if(type == "CSpiderFilterPatternKey") {
+        return new CSpiderFilterPatternKey();
+    }
 
     return NULL;
 }

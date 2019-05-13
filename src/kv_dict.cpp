@@ -128,7 +128,6 @@ int CKvDict::Get(const IKey& key, std::vector<IValue*>* value) {
             pthread_self(),
             key_str.c_str());
 
-
     std::vector<std::string> key_vec = StringToTokens(key_str, false, '\t');
 
     FOR_EACH(key_vec_itr, key_vec) {
@@ -144,7 +143,6 @@ int CKvDict::Get(const IKey& key, std::vector<IValue*>* value) {
                 key_str.c_str(),
                 val);
 
-
         if(m_record_repo.size() <= val) {
             continue;
         }
@@ -152,11 +150,6 @@ int CKvDict::Get(const IKey& key, std::vector<IValue*>* value) {
         value->push_back(m_record_repo[val]->value);
     }
 
-    return 0;
-}
-
-int CKvDict::Load(const std::string& dict_data_load_path) {
-    // adopt this interface
     return 0;
 }
 

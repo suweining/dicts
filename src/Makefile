@@ -38,7 +38,7 @@ LIBS		=	\
 LDFLAGS		= 	$(LIBS) -lre2 -Wl,-rpath=../lib -Wl,-rpath=./lib
 
 
-OBJS1		= 	ini.o  util.o log.o mmap_reader.o  pattern_dict.o spider_filter_pattern_key.o spider_filter_pattern_value.o spider_filter_kv_key.o spider_filter_kv_value.o  kv_dict.o dict_factory.o key_factory.o value_factory.o match_engine_unit.o match_engine_level.o
+OBJS1		= 	ini.o  util.o log.o mmap_reader.o  pattern_dict.o spider_filter_pattern_key.o spider_filter_pattern_value.o spider_filter_kv_key.o spider_filter_kv_value.o  kv_dict.o dict_factory.o key_factory.o value_factory.o match_engine_unit.o match_engine_level.o match_engine_singleton.o
 TARGET1		= 	../bin/libdicts.a
 
 OBJS2		= 	function_test.o
@@ -91,4 +91,4 @@ $(TEST_EXE4):$(TEST_OBJS4)
 
 .PHONY: clean
 clean:
-	rm -f $(HOME)/src/*.o $(HOME)/$(ALL_TARGETS)  $(TARGET2) #$(HOME)/$(ALL_TEST)
+	rm -f $(HOME)/src/*.o $(HOME)/$(ALL_TARGETS)  $(TARGET1) $(TARGET2) #$(HOME)/$(ALL_TEST)

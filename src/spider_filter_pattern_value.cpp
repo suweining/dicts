@@ -53,7 +53,7 @@ int CSpiderFilterPatternValue::Init(const void* input) {
     return 0;
 }
 
-int CSpiderFilterPatternValue::GetVal(void* output) {
+int CSpiderFilterPatternValue::GetVal(void* output) const {
 
     if(0 != m_value.size()) {
         *(std::string*) output = m_value;
@@ -96,7 +96,7 @@ int CSpiderFilterPatternValue::SetVal(const void* input) {
     return 0;
 }
 
-int CSpiderFilterPatternValue::ToString(void* output) {
+int CSpiderFilterPatternValue::ToString(void* output) const {
 
     if(0 != m_string.size()) {
         *(std::string*) output = m_string;
@@ -108,7 +108,7 @@ int CSpiderFilterPatternValue::ToString(void* output) {
     return 0;
 }
 
-int CSpiderFilterPatternValue::Compare(const IValue& v) {
+int CSpiderFilterPatternValue::Compare(const IValue& v) const {
 
     return 0;
 }

@@ -231,34 +231,55 @@ int CMatchEngineLevel::Del(const std::string& engine, const std::string& key){
         return 1;
     }
     return 0;
-
 }
 
+/*
+ *
+ * ret < 0 : error
+ * ret = 0 : miss
+ * ret = 1 : hit blacklist
+ * ret = 2 : hit whitelist
+ *
+ * */
 int CMatchEngineLevel::GetEngine(const std::string& engine, const std::string& key, std::vector<std::string>* value){
     CMatchEngineUnit* match_engine_unit_ptr = m_engine_pool[engine];
 
-    if(match_engine_unit_ptr->Get(key, value)) {
-        log (LOG_WARNING, "file:%s\tline:%d\ttid:%lld\t\tclass:CMatchEngineLevel\tfunc:ReadConfig\tinfo:Get engine %s failed",
-                __FILE__,
-                __LINE__,
-                engine.c_str());
-        return 1;
-    }
-    return 0;
+    return match_engine_unit_ptr->Get(key, value);
 }
-
+/*
+ *
+ * ret < 0 : error
+ * ret = 0 : miss
+ * ret = 1 : hit blacklist
+ * ret = 2 : hit whitelist
+ *
+ * */
 int CMatchEngineLevel::GetLevel(const std::string& level, const std::string& key, std::vector<std::string>* value){
+
+    int rc = 0;
     std::vector<std::string>& engine_vec = m_level_pool[level];
     FOR_EACH(engine_vec_itr, engine_vec) {
-        GetEngine(*engine_vec_itr, key, value);
+        int rc_engine = GetEngine(*engine_vec_itr, key, value);
+        if(0 >= rc) rc = rc_engine;
     }
-    return 0;
+    return rc;
 }
 
+/*
+ *
+ * ret < 0 : error
+ * ret = 0 : miss
+ * ret = 1 : hit blacklist
+ * ret = 2 : hit whitelist
+ *
+ * */
+
 int CMatchEngineLevel::GetSpec(const std::string& spec, const std::string& key, std::vector<std::string>* value){
+    int rc = 0;
     std::vector<std::string> spec_vec = StringToTokens(spec, false, ';');
     FOR_EACH(spec_itr, spec_vec) {
-        GetEngine(*spec_itr, key, value);
+        int rc_engine = GetEngine(*spec_itr, key, value);
+        if(0 >= rc) rc = rc_engine;
     }
-    return 0;
+    return rc;
 }

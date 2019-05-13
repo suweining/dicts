@@ -1,34 +1,52 @@
-#ifndef __AC_AUTOMATION_DICT__
-#define __AC_AUTOMATION_DICT__
-
-#include <vector>
-#include <map>
+#ifndef __DICTS_AC_AUTOMATCHINE_DICT__
+#define __DICTS_AC_AUTOMATCHINE_DICT__
 
 #include "dict.h"
-#include "ahocorasick.h"
+#include "key.h"
+#include "value.h"
 
-class AcAutomachineDict : public Dict {
+class CAcAutomatchineDict : public IDict {
+
     public:
-        AcAutomachineDict();
-        AcAutomachineDict(const std::string& dict_data_path);
-        ~AcAutomachineDict();
-        int Del(const std::string& key);
-        int Del() {return 0;}
-        int Get(const std::string& key, void* value);
-        int Set(const std::string& key, const std::string& value = "");
-        int Finalize() {return 0;}
-        int Load(const std::string& dict_data_path);
-        int Dump();
+        CAcAutomatchineDict();
+        ~CAcAutomatchineDict();
+
+        int Add(const IKey& key, const IValue& value);
+        int Set(const IKey& key, const IValue& value);
+        int Del(const IKey& key);
+        int Get(const IKey& key, std::vector<IValue*>* value);
+        int Dump(const std::string& dict_data_dump_path);
+        int Finalize();
+
+        int Info(std::string* info);
+        int Clear();
 
     private:
-        int BuildAcMation(const std::vector<std::string>& words);
+        int BuildAcMathine(const std::vector<std::string>& words);
+
+        struct Record {
+            IKey*   key;
+            IValue* value;
+            Record() : key(NULL), value(NULL) {
+
+            }
+            ~Record() {
+                if(NULL != key) {
+                    delete key;
+                    key = NULL;
+                }
+
+                if(NULL != value) {
+                    delete value;
+                    value = NULL;
+                }
+            }
+        };
+
 
     private:
-        std::string                                     m_dict_data_path; 
-        AC_AUTOMATA_t*                                  m_ac_automation;
-        std::vector<std::string>                        m_words;
-        std::vector<int>                                m_line_wordcount;
-        std::map<std::string, std::vector<int> >        m_word_inlines;
+        AC_AUTOMATA_t*          m_ac_automation;
+        std::vector<Record*>    m_record_vec;
 };
 
 #endif

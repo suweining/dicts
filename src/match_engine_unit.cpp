@@ -82,19 +82,34 @@ int CMatchEngineUnit::Reload(const std::string& load_path){
         return 1;
     }
 
+    log (LOG_INFO, "file:%s\tline:%d\ttid:%lld\tCMatchEngineUnit::ReLoad load_path:%s",
+            __FILE__,
+            __LINE__,
+            pthread_self(),
+            load_path.c_str());
+
+
     std::string line;
     while(std::getline(in_stream, line) && !in_stream.eof()) {
         // here need shared_ptr
         IKey* key_ptr = CKeyFactory::GetInstance()->GenKeyInstance(m_key_type);
         IValue* value_ptr = CValueFactory::GetInstance()->GenValueInstance(m_value_type);
 
+        if(NULL == key_ptr || NULL == value_ptr) {
+            log (LOG_DEBUG, "file:%s\tline:%d\ttid:%lld\tCMatchEngineUnit::ReLoad gen key(%s) or value(%s) error",
+                    __FILE__,
+                    __LINE__,
+                    pthread_self(),
+                    m_key_type.c_str(),
+                    m_value_type.c_str());
+            continue;
+        }
 
         log (LOG_DEBUG, "file:%s\tline:%d\ttid:%lld\tCMatchEngineUnit::ReLoad readline:%s",
                 __FILE__,
                 __LINE__,
                 pthread_self(),
                 line.c_str());
-
 
         if(key_ptr->Init(&line) || value_ptr->Init(&line)) {
             log(LOG_INFO, "%s:%d\ttid:%lld\tCMatchEngineUnit::ReLoad key or value init fail, and line:%s",
@@ -208,20 +223,61 @@ int CMatchEngineUnit::Del(const std::string& key){
     return 0;
 }
 
+/*
+ *
+ * ret < 0 : error
+ * ret = 0 : miss
+ * ret = 1 : hit blacklist
+ * ret = 2 : hit whitelist
+ *
+ * */
 int CMatchEngineUnit::Get(const std::string& key, std::vector<std::string>* value){
 
-    if(NULL == value) {
-        return 0; 
+    log (LOG_DEBUG, "file:%s\tline:%d\ttid:%lld\t\tclass:CMatchEngineUnit::Get m_key_type=%s, key=%s",
+                __FILE__,
+                __LINE__,
+                pthread_self(),
+                m_key_type.c_str(),
+                key.c_str());
+
+    if(NULL == value || 0 == m_key_type.size()) {
+
+        log (LOG_INFO, "file:%s\tline:%d\ttid:%lld\t\tclass:CMatchEngineUnit::Get value or m_key_type is null",
+                __FILE__,
+                __LINE__,
+                pthread_self());
+
+                return -1;
     }
 
     IKey* key_ptr = CKeyFactory::GetInstance()->GenKeyInstance(m_key_type);
+    if(NULL == key_ptr) {
+        log (LOG_DEBUG, "file:%s\tline:%d\ttid:%lld\t\tclass:CMatchEngineUnit::Get gen key_ptr null and key=%s",
+                __FILE__,
+                __LINE__,
+                pthread_self(),
+                key.c_str());
+
+        return -2;
+    }
+
     if(key_ptr->SetKey(&key)) {
-        return 1;
+        log (LOG_DEBUG, "file:%s\tline:%d\ttid:%lld\t\tclass:CMatchEngineUnit::Get init key_ptr fail and key=%s",
+                __FILE__,
+                __LINE__,
+                pthread_self(),
+                key.c_str());
+        return -3;
     }
 
     std::vector<IValue*> hit_value_vec;
     if(NULL == m_dict || m_dict->Get(*key_ptr, &hit_value_vec)) {
-        return 2;
+        log (LOG_DEBUG, "file:%s\tline:%d\ttid:%lld\t\tclass:CMatchEngineUnit::Get key and key=%s",
+                __FILE__,
+                __LINE__,
+                pthread_self(),
+                key.c_str());
+        return -4;
     }
 
     FOR_EACH(hit_value_vec_itr, hit_value_vec) {
@@ -229,10 +285,30 @@ int CMatchEngineUnit::Get(const std::string& key, std::vector<std::string>* valu
         if((*hit_value_vec_itr)->GetVal(&value_str)) {
             continue;
         }
-        value->push_back(value_str);
+        std::string ret = "{\"engine\":\"" + m_engine + "\""
+            + ",\"value\":\"" + value_str + "\""
+            + ",\"blacklist\":";
+
+        m_blacklist ? ret += "\"true\"}" : ret += "\"false\"}";
+
+        value->push_back(ret);
+
+        log (LOG_DEBUG, "file:%s\tline:%d\ttid:%lld\t\tclass:CMatchEngineUnit::Get hit value=%s",
+                __FILE__,
+                __LINE__,
+                pthread_self(),
+                ret.c_str());
     }
 
-    return 0;
+    if(0 == value->size()) {
+        return 0;
+    }
+
+    if(m_blacklist) {
+        return 1;
+    }
+
+    return 2;
 }
 
 int CMatchEngineUnit::readConfig() {
@@ -251,8 +327,17 @@ int CMatchEngineUnit::readConfig() {
 
     if(NULL != (read_iterm = ini_read(ini_reader, m_engine.c_str(), "dict_type"))) {
         m_dict_type = read_iterm;
+
+        log (LOG_DEBUG, "file:%s\tline:%d\ttid:%lld\tCMatchEngineUnit::ReadConfig %s's dict_type is %s",
+                __FILE__,
+                __LINE__,
+                pthread_self(),
+                m_engine.c_str(),
+                read_iterm);
+
     }
     else {
+
         log (LOG_WARNING, "file:%s\tline:%d\ttid:%lld\tfunc:ReadConfig\tinfo:engine %s has no dict_type",
                 __FILE__,
                 __LINE__,
@@ -262,7 +347,16 @@ int CMatchEngineUnit::readConfig() {
     }
 
     if(NULL != (read_iterm = ini_read(ini_reader, m_engine.c_str(), "key_type"))) {
+
         m_key_type = read_iterm;
+
+        log (LOG_DEBUG, "file:%s\tline:%d\ttid:%lld\tCMatchEngineUnit::ReadConfig %s's key_type is %s",
+                __FILE__,
+                __LINE__,
+                pthread_self(),
+                m_engine.c_str(),
+                read_iterm);
+
     }
     else {
         log (LOG_WARNING, "file:%s\tline:%d\ttid:%lld\tfunc:ReadConfig\tinfo:engine %s has no key_type",
@@ -275,6 +369,14 @@ int CMatchEngineUnit::readConfig() {
 
     if(NULL != (read_iterm = ini_read(ini_reader, m_engine.c_str(), "value_type"))) {
         m_value_type = read_iterm;
+
+        log (LOG_DEBUG, "file:%s\tline:%d\ttid:%lld\tCMatchEngineUnit::ReadConfig %s's value_type is %s",
+                __FILE__,
+                __LINE__,
+                pthread_self(),
+                m_engine.c_str(),
+                read_iterm);
+
     }
     else {
         log (LOG_WARNING, "file:%s\tline:%d\ttid:%lld\tfunc:ReadConfig\tinfo:engine %s has no value_type",
@@ -287,6 +389,15 @@ int CMatchEngineUnit::readConfig() {
 
     if(NULL != (read_iterm = ini_read(ini_reader, m_engine.c_str(), "load_path"))) {
         m_load_path = read_iterm;
+
+        log (LOG_DEBUG, "file:%s\tline:%d\ttid:%lld\tCMatchEngineUnit::ReadConfig %s's load_path is %s",
+                __FILE__,
+                __LINE__,
+                pthread_self(),
+                m_engine.c_str(),
+                read_iterm);
+
+
     }
     else {
         log (LOG_WARNING, "file:%s\tline:%d\ttid:%lld\tfunc:ReadConfig\tinfo:engine %s has no load_path",
@@ -299,6 +410,14 @@ int CMatchEngineUnit::readConfig() {
 
     if(NULL != (read_iterm = ini_read(ini_reader, m_engine.c_str(), "dump_path"))) {
         m_dump_path = read_iterm;
+
+        log (LOG_DEBUG, "file:%s\tline:%d\ttid:%lld\tCMatchEngineUnit::ReadConfig %s's dump_path is %s",
+                __FILE__,
+                __LINE__,
+                pthread_self(),
+                m_engine.c_str(),
+                read_iterm);
+
     }
     else {
         log (LOG_WARNING, "file:%s\tline:%d\ttid:%lld\tfunc:ReadConfig\tinfo:engine %s has no dump_path",
@@ -315,6 +434,13 @@ int CMatchEngineUnit::readConfig() {
         else {
             m_blacklist = false;
         }
+
+        log (LOG_DEBUG, "file:%s\tline:%d\ttid:%lld\tCMatchEngineUnit::ReadConfig %s's blacklist is %s",
+                __FILE__,
+                __LINE__,
+                pthread_self(),
+                m_engine.c_str(),
+                read_iterm);
     }
     else {
         // m_blacklist default is true;

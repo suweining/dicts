@@ -55,7 +55,7 @@ int CSpiderFilterKvValue::Init(const void* input) {
     return 0;
 }
 
-int CSpiderFilterKvValue::GetVal(void* output) {
+int CSpiderFilterKvValue::GetVal(void* output) const {
 
     if(0 != m_value.size()) {
         *(std::string*) output = m_value;
@@ -98,7 +98,7 @@ int CSpiderFilterKvValue::SetVal(const void* input) {
     return 0;
 }
 
-int CSpiderFilterKvValue::ToString(void* output) {
+int CSpiderFilterKvValue::ToString(void* output) const{
 
     if(0 != m_string.size()) {
         *(std::string*) output = m_string;
@@ -110,7 +110,7 @@ int CSpiderFilterKvValue::ToString(void* output) {
     return 0;
 }
 
-int CSpiderFilterKvValue::Compare(const IValue& v) {
+int CSpiderFilterKvValue::Compare(const IValue& v) const{
     return 0;
 }
 

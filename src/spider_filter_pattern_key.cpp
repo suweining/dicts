@@ -7,31 +7,41 @@
 
 
 CSpiderFilterPatternKey::CSpiderFilterPatternKey() {
-
+        log(LOG_DEBUG, "%s:%d\ttid:%lld\tclass:CSpiderFilterPatternKey::Construct",
+                __FILE__,
+                __LINE__,
+                pthread_self());
 }
 
 CSpiderFilterPatternKey::~CSpiderFilterPatternKey() {
-
+        log(LOG_DEBUG, "%s:%d\ttid:%lld\tclass:CSpiderFilterPatternKey::UnConstruct",
+                __FILE__,
+                __LINE__,
+                pthread_self());
 }
 
 int CSpiderFilterPatternKey::Init(const void* input) {
 
     // 1. check input
     if(NULL == input){
+
         log(LOG_INFO, "%s:%d\ttid:%lld\tclass:CSpiderFilterPatternKey\tfunction:Init\tinfo:input is NULL",
                 __FILE__,
                 __LINE__,
                 pthread_self());
+
         return 1;
     }
 
     std::string* input_str = (std::string*)input;
 
     if(0 == input_str->size()) {
+
          log(LOG_INFO, "%s:%d\ttid:%lld\tclass:CSpiderFilterPatternKey\tfunction:Init\tinfo:input's size is 0",
                 __FILE__,
                 __LINE__,
                 pthread_self());
+
         return 2;
     }
 
@@ -40,10 +50,12 @@ int CSpiderFilterPatternKey::Init(const void* input) {
 
     std::vector<std::string> fields = StringToTokens(*input_str, false, '\t');
     if(2 > fields.size()) {
+
           log(LOG_INFO, "%s:%d\ttid:%lld\tclass:CSpiderFilterPatternKey\tfunction:Init\tinfo:input's field < 2",
                 __FILE__,
                 __LINE__,
                 pthread_self());
+
           return 3;
     }
 
@@ -60,17 +72,8 @@ int CSpiderFilterPatternKey::Init(const void* input) {
 
     // 3. set m_string
     m_string = pattern_field;
-
-    // 4. pattern_field is url pattern, we need reverse the host part to set m_key
-    int rc = genKey(pattern_field);
-    if(0 != rc) {
-            log(LOG_INFO, "%s:%d\ttid:%lld\tclass:CSpiderFilterPatternKey\tfunction:Init\tinfo: genKey errorcode is %d",
-                __FILE__,
-                __LINE__,
-                pthread_self(),
-                rc);
-            return 5;
-    }
+    m_key_build_dict = pattern_field;
+    m_key_query_dict.clear();
 
     return 0;
 }
@@ -96,28 +99,24 @@ int CSpiderFilterPatternKey::SetKey(const void* input) {
 
     // 2. set m_string
     m_string = *input_str;
-
-    // 3. input_str is url pattern, we need reverse the host part to get m_key
-    int rc = genKey(*input_str);
-    if(0 != rc) {
-            log(LOG_WARNING, "%s:%d\ttid:%lld\tclass:CSpiderFilterPatternKey\tfunction:SetKey\tinfo: genKey errorcode is %d",
-                __FILE__,
-                __LINE__,
-                pthread_self(),
-                rc);
-            return 3;
-    }
+    m_key_query_dict = * input_str;
+    m_key_build_dict.clear();
 
     return 0;
 }
 
 int CSpiderFilterPatternKey::GetKey(void* output) const {
 
-    if(m_key.size() <= 0) {
+    if(m_string.size() <= 0) {
         return 1;
     }
 
-    *(std::string*)output = m_key;
+    if(0 != m_key_build_dict.size()) {
+        return GetBuildDictKey(output);
+    }
+    else {
+        return GetQueryDictKey(output);
+    }
 
     return 0;
 }
@@ -146,31 +145,40 @@ int CSpiderFilterPatternKey::Compare(const IKey& key) const {
         return 1;
     }
 
-    return m_key.compare(key_str);
+    return m_string.compare(key_str);
 }
 
 int CSpiderFilterPatternKey::Func(const void* input, void* output) {
 
     // NULL
-
     return 0;
 }
 
+int CSpiderFilterPatternKey::GetBuildDictKey(void *output) const {
 
-/*
- * TODO: gen m_key: reverse the host part
- * */
-int CSpiderFilterPatternKey::genKey(const std::string& pattern) {
+    std::string pattern;
+    if(0 == m_key_build_dict.size()) {
+       pattern = m_string;
+    }
+    else {
+        pattern = m_key_build_dict;
+    }
+
+    log(LOG_DEBUG, "%s:%d\ttid:%lld\tclass:CSpiderFilterPatternKey::GetBuildDictKey pattern=%s",
+            __FILE__,
+            __LINE__,
+            pthread_self(),
+            pattern.c_str());
 
     // 1. get host
     std::vector<std::string> url_parts = StringToTokens(pattern, false, '/');
     size_t url_parts_len = url_parts.size();
     if(url_parts_len < 2) {
-        log(LOG_WARNING, "%s:%d\ttid:%lld\tclass:CSpiderFilterPatternKey\tfunction:Init\tinfo:pattern's format is error",
+        log(LOG_WARNING, "%s:%d\ttid:%lld\tclass:CSpiderFilterPatternKey::GetBuildDictKey pattern's format is error",
                 __FILE__,
                 __LINE__,
                 pthread_self());
-        return 1; 
+        return 1;
     }
 
     std::string host = url_parts[1];
@@ -186,6 +194,7 @@ int CSpiderFilterPatternKey::genKey(const std::string& pattern) {
         host.erase(host.begin() + host_len - 1);
         host_len = host.size();
     }
+
     if(0 == host_len) {
         log(LOG_ERROR, "%s:%d\ttid:%lld\tclass:CSpiderFilterPatternKey\tfunction:genKey\tinfo:host's format is error", 
                 __FILE__,
@@ -207,18 +216,75 @@ int CSpiderFilterPatternKey::genKey(const std::string& pattern) {
         reversal_host += "$";
     }
 
-    // 4. gen m_key: joint url as m_key
+    // 4. gen target_key
+    std::string target_key;
     for(size_t i = 0; i < url_parts_len; ++i) {
         if(i == 0) {
-            m_key += url_parts[0] + "//";
+            target_key += url_parts[0] + "//";
         }
         else if(i == 1) {
-            m_key += reversal_host;
+            target_key += reversal_host;
         }
         else {
-            m_key += "/" + url_parts[i];
+            target_key += "/" + url_parts[i];
         }
     }
+
+    *(std::string*)output = target_key;
     return 0;
 }
 
+int CSpiderFilterPatternKey::GetQueryDictKey(void* output) const {
+
+    std::string pattern;
+    if(0 == m_key_query_dict.size()) {
+       pattern = m_string;
+    }
+    else {
+        pattern = m_key_query_dict;
+    }
+
+    log(LOG_DEBUG, "%s:%d\ttid:%lld\tclass:CSpiderFilterPatternKey::GetQueryDictKey pattern=%s",
+            __FILE__,
+            __LINE__,
+            pthread_self(),
+            pattern.c_str());
+
+    // 1. get host
+    std::vector<std::string> url_parts = StringToTokens(pattern, false, '/');
+    size_t url_parts_len = url_parts.size();
+    if(url_parts_len < 2) {
+        log(LOG_WARNING, "%s:%d\ttid:%lld\tclass:CSpiderFilterPatternKey::GetQueryDictKey pattern's format is error",
+                __FILE__,
+                __LINE__,
+                pthread_self());
+        return 1;
+    }
+
+    std::string host = url_parts[1];
+    // 2. reversal host
+    std::vector<std::string> host_parts = StringToTokens2(host, false, ".");
+    size_t host_parts_len = host_parts.size();
+    std::string reversal_host;
+    for(size_t i = host_parts_len - 1; i > 0; --i) {
+        reversal_host += host_parts[i] + ".";
+    }
+    reversal_host += host_parts[0];
+
+    // 3. gen target_key
+    std::string target_key;
+    for(size_t i = 0; i < url_parts_len; ++i) {
+        if(i == 0) {
+            target_key += url_parts[0] + "//";
+        }
+        else if(i == 1) {
+            target_key += reversal_host;
+        }
+        else {
+            target_key += "/" + url_parts[i];
+        }
+    }
+
+    *(std::string*)output = target_key;
+    return 0;
+}
