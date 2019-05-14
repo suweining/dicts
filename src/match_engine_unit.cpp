@@ -79,7 +79,16 @@ int CMatchEngineUnit::Init() {
 
     // 3. init the dict
     m_dict = CDictFactory::GetInstance()->GenDictInstance(m_dict_type);
-    m_dict->Init(m_dict_init_params);
+    int rc = m_dict->Init(m_dict_init_params));
+    if(rc) {
+        log (LOG_WARNING, "%s:%d\ttid:%lld\t\tclass:CMatchEngineUnit\tdict init error(%d)",
+                __FILE__,
+                __LINE__,
+                pthread_self(),
+                rc);
+
+        retturn 3;
+    }
     return 0;
 }
 
