@@ -283,6 +283,12 @@ int CMatchEngineSingleton::GetEngine(const std::string& engine, const std::strin
 
 
 }
+/*
+ * ret < 0 : error
+ * ret = 0 : miss
+ * ret = 1 : hit blacklist
+ * ret = 2 : hit whitelist
+ * */
 int CMatchEngineSingleton::GetLevel(const std::string& level, const std::string& key, std::vector<std::string>* value){
 
     if(NULL == m_match_engine_level) {
@@ -303,7 +309,7 @@ int CMatchEngineSingleton::GetLevel(const std::string& level, const std::string&
                 key.c_str(),
                 value->size(),
                 rc);
-        return rc; 
+        return rc;
     }
 
     log(LOG_DEBUG, "%s:%d\ttid:%lld\tCMatchEngineSingleton::GetEngine m_match_engine_level->GetLevel(%s, %s, %d) success",

@@ -9,11 +9,32 @@
 #include "util.h"
 #include "ini.h"
 
-CMatchEngineUnit::CMatchEngineUnit() {
+CMatchEngineUnit::CMatchEngineUnit() :
+    m_config(""), 
+    m_engine(""),
+    m_dict_init_params(""),
+    m_dict_type(""),
+    m_key_type(""),
+    m_value_type(""),
+    m_load_path(""),
+    m_dump_path(""),
+    m_blacklist(true),
+    m_dict(NULL){
+ 
 
 }
 
-CMatchEngineUnit::CMatchEngineUnit(const std::string& config, const std::string& engine) : m_config(config), m_engine(engine) {
+CMatchEngineUnit::CMatchEngineUnit(const std::string& config, const std::string& engine) : 
+    m_config(config), 
+    m_engine(engine),
+    m_dict_init_params(""),
+    m_dict_type(""),
+    m_key_type(""),
+    m_value_type(""),
+    m_load_path(""),
+    m_dump_path(""),
+    m_blacklist(true),
+    m_dict(NULL){
     log (LOG_WARNING, "file:%s\tline:%d\ttid:%lld\t\tclass:CMatchEngineUnit\tfunc:Construct\tinfo:config=%s, dict_type=%s",
             __FILE__,
             __LINE__,
@@ -58,6 +79,7 @@ int CMatchEngineUnit::Init() {
 
     // 3. init the dict
     m_dict = CDictFactory::GetInstance()->GenDictInstance(m_dict_type);
+    m_dict->Init(m_dict_init_params);
     return 0;
 }
 
@@ -271,7 +293,7 @@ int CMatchEngineUnit::Get(const std::string& key, std::vector<std::string>* valu
     }
 
     std::vector<IValue*> hit_value_vec;
-    if(NULL == m_dict || m_dict->Get(*key_ptr, &hit_value_vec)) {
+    if(NULL == m_dict ) {
         log (LOG_DEBUG, "file:%s\tline:%d\ttid:%lld\t\tclass:CMatchEngineUnit::Get key and key=%s",
                 __FILE__,
                 __LINE__,
@@ -279,6 +301,14 @@ int CMatchEngineUnit::Get(const std::string& key, std::vector<std::string>* valu
                 key.c_str());
         return -4;
     }
+
+    int rc = m_dict->Get(*key_ptr, &hit_value_vec);
+    log (LOG_DEBUG, "%s:%d\ttid:%lld\t\tclass:CMatchEngineUnit::Get(%s, &val) ret:%d",
+            __FILE__,
+            __LINE__,
+            pthread_self(),
+            key.c_str(),
+            rc);
 
     FOR_EACH(hit_value_vec_itr, hit_value_vec) {
         std::string value_str;
@@ -345,6 +375,26 @@ int CMatchEngineUnit::readConfig() {
                 m_engine.c_str());
         return 1;
     }
+
+    if(NULL != (read_iterm = ini_read(ini_reader, m_engine.c_str(), "init_param"))) {
+
+        m_dict_init_params = read_iterm;
+
+        log (LOG_DEBUG, "file:%s\tline:%d\ttid:%lld\tCMatchEngineUnit::ReadConfig %s's init_param is %s",
+                __FILE__,
+                __LINE__,
+                pthread_self(),
+                m_engine.c_str(),
+                read_iterm);
+    }
+    else {
+        log (LOG_INFO, "file:%s\tline:%d\ttid:%lld\tfunc:ReadConfig\tinfo:engine %s has no init_params",
+                __FILE__,
+                __LINE__,
+                pthread_self(),
+                m_engine.c_str());
+    }
+
 
     if(NULL != (read_iterm = ini_read(ini_reader, m_engine.c_str(), "key_type"))) {
 

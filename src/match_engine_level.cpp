@@ -242,8 +242,8 @@ int CMatchEngineLevel::Del(const std::string& engine, const std::string& key){
  *
  * */
 int CMatchEngineLevel::GetEngine(const std::string& engine, const std::string& key, std::vector<std::string>* value){
-    CMatchEngineUnit* match_engine_unit_ptr = m_engine_pool[engine];
 
+    CMatchEngineUnit* match_engine_unit_ptr = m_engine_pool[engine];
     return match_engine_unit_ptr->Get(key, value);
 }
 /*
