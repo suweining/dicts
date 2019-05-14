@@ -9,6 +9,7 @@
 
 class IDict {
     public:
+        virtual int Init(const std::string& params) = 0; // init dict
         virtual int Set(const IKey& key, const IValue& value) = 0; // use for update value while dict has build
         virtual int Add(const IKey& key, const IValue& value) = 0; // add record for building the dict
         virtual int Del(const IKey& key) = 0; // del record info in the dict

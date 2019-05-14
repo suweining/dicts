@@ -12,6 +12,10 @@ CKvDict::~CKvDict() {
 
 }
 
+int CKvDict::Init(const std::string& params) {
+    return 0;
+}
+
 int CKvDict::Set(const IKey& key, const IValue& value) {
     std::string key_str;
     if(key.GetKey(&key_str)) {

@@ -27,6 +27,10 @@ CPatternDict::~CPatternDict() {
     }
 }
 
+int CPatternDict::Init(const std::string& params) {
+    return 0;
+}
+
 int CPatternDict::Set(const IKey& key, const IValue& value) {
     std::string re_string;
     int rc;
@@ -194,11 +198,12 @@ int CPatternDict::Get(const IKey& key, std::vector<IValue*>* value) {
         std::vector<int> match_regex_info_index; 
         prefix_info_itr->dfa->Match(keyword, &match_regex_info_index);
 
-        log(LOG_DEBUG, "%s:%d\ttid:%lld\tclass:CPatternDict::Get prefix[%s]'s DFA ret match_regex_info_index.size=%d",
+        log(LOG_DEBUG, "%s:%d\ttid:%lld\tclass:CPatternDict::Get prefix[%s]'s DFA(has %d online rule) ret match_regex_info_index.size=%d",
                 __FILE__,
                 __LINE__,
                 pthread_self(),
                 prefix_info_itr->prefix.c_str(),
+                prefix_info_itr->regex_info_online.size(),
                 match_regex_info_index.size());
 
         for(size_t i = 0; i < match_regex_info_index.size(); ++i) {
@@ -213,6 +218,7 @@ int CPatternDict::Get(const IKey& key, std::vector<IValue*>* value) {
                     prefix_info_itr->regex_info_online[i].regex.c_str());
 
         }
+
         for(size_t i = 0; i < prefix_info_itr->regex_info_offline.size(); ++i) {
             if(RE2::FullMatch(keyword.c_str(), prefix_info_itr->regex_info_offline[i].regex.c_str())) {
                 hit_regex_info.push_back(prefix_info_itr->regex_info_offline[i]);
@@ -225,6 +231,7 @@ int CPatternDict::Get(const IKey& key, std::vector<IValue*>* value) {
             }
         }
     }
+
     // get hit_dict_info index from hit_prefix_info
     std::vector<DictInfoMeta> hit_dict_info;
     for(size_t i = 0; i < hit_regex_info.size(); ++i) {
@@ -266,7 +273,7 @@ int CPatternDict::Dump(const std::string& dict_data_dump_path) {
 
 int CPatternDict::Finalize() {
 
-    //prepare m_prefix_info_write by m_dict_info_write 
+    // 1. prepare m_prefix_info_write by m_dict_info_write 
     size_t dict_info_len = m_dict_info_write.size();
 
     log(LOG_DEBUG, "%s:%d\ttid:%lld\tclass:CPatternDict::Finalize begin finalize, m_dict_info_write.size=%d", 
@@ -274,11 +281,12 @@ int CPatternDict::Finalize() {
             __LINE__,
             pthread_self(), 
             dict_info_len);
-
+ 
     for(size_t i = 0; i < dict_info_len; ++i) {
         std::string re_string;
         m_dict_info_write[i].key->GetKey(&re_string);
 
+        // 1.1 get prefix_info from record
         PrefixInfoMeta prefix_info;
         int rc = 0;
         if((rc = RePrefix(re_string, &(prefix_info.prefix))) && rc != 0) {
@@ -296,14 +304,17 @@ int CPatternDict::Finalize() {
                 pthread_self(),
                 prefix_info.prefix.c_str());
 
+        // gen RegexInfoMeta for prefix_into
         RegexInfoMeta regex_info_meta;
         regex_info_meta.regex   = re_string;
         regex_info_meta.index   = i;
 
+        // check this prefix_info.prefix exist in m_prefix_info_write or not
         typeof(m_prefix_info_write.begin()) prefix_info_itr = m_prefix_info_write.end();
         FOR_EACH(itr, m_prefix_info_write) {
-            if(itr->prefix == regex_info_meta.regex) {
+            if(itr->prefix == prefix_info.prefix) {
                 prefix_info_itr= itr;
+                break;
             }
         }
         if(m_prefix_info_write.end() == prefix_info_itr) {
@@ -420,6 +431,7 @@ int CPatternDict::Separation() {
 
 int CPatternDict::BuildTrie() {
     int prefix_info_write_len = m_prefix_info_write.size();
+    std::set<std::string> key_set;
     std::vector<const char *> keys;
     std::vector<std::size_t> lengths;
     std::vector<DartsDatrie::value_type> values;
@@ -447,12 +459,24 @@ int CPatternDict::BuildTrie() {
             continue;
         }
 
-        log(LOG_DEBUG, "%s:%d\ttid:%lld\tclass:CPatternDict::BuildTrie m_prefix_info_write[%d]=%s",
-                __FILE__,
-                __LINE__,
-                pthread_self(),
-                i,
-                prefix.c_str());
+        if(key_set.count(prefix)) {
+            log(LOG_DEBUG, "%s:%d\ttid:%lld\tclass:CPatternDict::BuildTrie m_prefix_info_write[%d]=%s is dump",
+                    __FILE__,
+                    __LINE__,
+                    pthread_self(),
+                    i,
+                    prefix.c_str());
+
+            continue; 
+        }else{
+            key_set.insert(prefix);
+            log(LOG_DEBUG, "%s:%d\ttid:%lld\tclass:CPatternDict::BuildTrie m_prefix_info_write[%d]=%s",
+                    __FILE__,
+                    __LINE__,
+                    pthread_self(),
+                    i,
+                    prefix.c_str());
+        }
 
         // TODO: should remove "\" in "\.", "\$", "\{"
         keys.push_back(prefix.c_str());

@@ -20,6 +20,7 @@ class CPatternDict : public IDict {
         CPatternDict();
         ~CPatternDict();
 
+        int Init(const std::string& params);
         int Set(const IKey& key, const IValue& value);
         int Add(const IKey& key, const IValue& value);
         int Del(const IKey& key);
@@ -58,7 +59,7 @@ class CPatternDict : public IDict {
                     }
                 }
                 void ExitWrite(){
-                    Guard g(counter_mutex);      
+                    Guard g(counter_mutex);
                     -- counter;
                     counter = (counter < 0) ? 0 : counter;
                 }
@@ -70,7 +71,7 @@ class CPatternDict : public IDict {
 
             Node1(IKey* k, IValue* v) : key(k), value(v) {}
             ~Node1() {
-            
+
             }
 
             bool operator == (const Node1& n) {

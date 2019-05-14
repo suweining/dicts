@@ -12,6 +12,7 @@ class CKvDict : public IDict {
         CKvDict();
         ~CKvDict(); 
 
+        int Init(const std::string& params);
         int Add(const IKey& key, const IValue& value);
         int Set(const IKey& key, const IValue& value);
         int Del(const IKey& key);
