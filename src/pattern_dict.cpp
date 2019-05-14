@@ -431,7 +431,6 @@ int CPatternDict::Separation() {
 
 int CPatternDict::BuildTrie() {
     int prefix_info_write_len = m_prefix_info_write.size();
-    std::set<std::string> key_set;
     std::vector<const char *> keys;
     std::vector<std::size_t> lengths;
     std::vector<DartsDatrie::value_type> values;
@@ -457,25 +456,6 @@ int CPatternDict::BuildTrie() {
                     i);
 
             continue;
-        }
-
-        if(key_set.count(prefix)) {
-            log(LOG_DEBUG, "%s:%d\ttid:%lld\tclass:CPatternDict::BuildTrie m_prefix_info_write[%d]=%s is dump",
-                    __FILE__,
-                    __LINE__,
-                    pthread_self(),
-                    i,
-                    prefix.c_str());
-
-            continue; 
-        }else{
-            key_set.insert(prefix);
-            log(LOG_DEBUG, "%s:%d\ttid:%lld\tclass:CPatternDict::BuildTrie m_prefix_info_write[%d]=%s",
-                    __FILE__,
-                    __LINE__,
-                    pthread_self(),
-                    i,
-                    prefix.c_str());
         }
 
         // TODO: should remove "\" in "\.", "\$", "\{"
