@@ -6,7 +6,7 @@
 
 int main() {
 
-    log_init("../logs/log", LOG_YEAR_DAY_HOUR, LOG_DEBUG, false);
+    log_init("./log", LOG_YEAR_DAY_HOUR, LOG_DEBUG, false);
 
     CMatchEngineLevel match_engine_level("../config/config.ini");
 
@@ -24,10 +24,10 @@ int main() {
             match_engine_level.Reload();
 
             std::cout << "reload success" << std::endl;
-            continue; 
+            continue;
         }
 
-        match_engine_level.GetEngine("matchine1", input_line, &value_vec);
+        match_engine_level.GetEngine("matchine3", input_line, &value_vec);
         size_t value_len = value_vec.size();
 
         for(size_t i = 0; i < value_len; ++i) {
