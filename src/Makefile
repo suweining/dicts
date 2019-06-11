@@ -2,7 +2,7 @@ CPP			= /opt/gcc-4.7.2/bin/g++
 BUILD	   ?= debug
 ifeq (debug, $(shell tr '[:upper:]' '[:lower:]' <<< $(BUILD)))
 	override BUILD = debug
-	CPPFLAGS = $(INCLUDE) -fPIC -g -std=gnu++11 
+	CPPFLAGS = $(INCLUDE) -fPIC -g -std=gnu++11
 else
 	override BUILD = release
 	CPPFLAGS = $(INCLUDE) -fPIC -O2
@@ -15,6 +15,8 @@ LIB_AHOCORASICK	= 	$(THIRD_PARTY)/ahocorasick
 LIB_RE		=	$(THIRD_PARTY)/re2
 LIB_THRIFT	=	$(THIRD_PARTY)/thrift-0.9.1/
 LIB_RAPIDJSON	=	$(THIRD_PARTY)/rapidjson/
+LIB_REDISCLIENT =	$(THIRD_PARTY)/redis_client/
+LIB_HIREDIS	=	$(THIRD_PARTY)/hiredis/
 
 
 INCLUDE		=	\
@@ -24,10 +26,14 @@ INCLUDE		=	\
 			-I$(LIB_RE)/include \
 			-I$(LIB_THRIFT)/include \
 			-I$(LIB_RAPIDJSON)/include \
+			-I$(LIB_HIREDIS)/include \
+			-I$(LIB_REDISCLIENT)/include \
 
 LIBS		=	\
 			-L$(HOME)/lib \
 			-L$(LIB_RE)/lib \
+			-L$(LIB_REDISCLIENT)/lib \
+			-L$(LIB_HIREDIS)/lib \
 			$(LIB_AHOCORASICK)/lib/libahocorasick.a \
 			$(LIB_GTEST)/lib/libgtest.a \
 			$(LIB_THRIFT)/lib/libthrift.a \
@@ -35,11 +41,17 @@ LIBS		=	\
 			$(LIB_RAPIDJSON)/lib4c/librapidjson.a \
 
 
-LDFLAGS		= 	$(LIBS) -lre2 -Wl,-rpath=../lib -Wl,-rpath=./lib
+LDFLAGS		= 	$(LIBS) -lre2 -lhiredis -lredis_client -Wl,-rpath=../lib -Wl,-rpath=./lib -Wl,-rpath=../lib
 
+OBJS1		= 	dict_factory.o key_factory.o value_factory.o \
+			match_engine_singleton.o match_engine_level.o match_engine_unit.o \
+			pattern_dict.o kv_dict.o redis_dict.o \
+			spider_filter_pattern_key.o spider_filter_pattern_value.o \
+			spider_filter_kv_key.o spider_filter_kv_value.o \
+			redis_common_key.o redis_common_value.o \
+			ini.o  util.o log.o mmap_reader.o \
 
-OBJS1		= 	ini.o  util.o log.o mmap_reader.o  pattern_dict.o spider_filter_pattern_key.o spider_filter_pattern_value.o spider_filter_kv_key.o spider_filter_kv_value.o  kv_dict.o dict_factory.o key_factory.o value_factory.o match_engine_unit.o match_engine_level.o match_engine_singleton.o
-TARGET1		= 	../bin/libdicts.a
+TARGET1		= 	../libdicts/lib/libdicts.a
 
 OBJS2		= 	function_test.o
 TARGET2		= 	../bin/function_test
@@ -70,9 +82,13 @@ all: $(ALL_TARGETS)
 
 $(TARGET1): $(OBJS1)
 	ar cr $(TARGET1) $(OBJS1)
+	cp ../include/dict.h ../include/key.h ../include/value.h ../include/singleton.h \
+	    ../include/match_engine_singleton.h ../include/match_engine_level.h  ../include/match_engine_unit.h \
+	    ../include/util.h  \
+	    ../libdicts/include/
 
 $(TARGET2): $(OBJS2)
-	$(CPP) -o $@ $^ ../bin/libdicts.a $(LDFLAGS) 
+	$(CPP) -o $@ $^ $(TARGET1) $(LDFLAGS) 
 
 $(TEST_EXE1): $(TEST_OBJS1)
 	$(CPP) -o $@ $^ $(LDFLAGS)
@@ -91,4 +107,4 @@ $(TEST_EXE4):$(TEST_OBJS4)
 
 .PHONY: clean
 clean:
-	rm -f $(HOME)/src/*.o $(HOME)/$(ALL_TARGETS)  $(TARGET1) $(TARGET2) #$(HOME)/$(ALL_TEST)
+	rm -f $(HOME)/src/*.o $(HOME)/$(ALL_TARGETS)  $(TARGET1) $(TARGET2) 
