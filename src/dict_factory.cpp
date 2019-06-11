@@ -1,6 +1,7 @@
 #include "dict_factory.h"
 #include "kv_dict.h"
 #include "pattern_dict.h"
+#include "redis_dict.h"
 
 CDictFactory::CDictFactory(){
 
@@ -21,7 +22,7 @@ IDict* CDictFactory::GenDictInstance(const std::string& type){
 
     NEW_DICT_CLASS(CKvDict);
     NEW_DICT_CLASS(CPatternDict);
-    
+    NEW_DICT_CLASS(CRedisDict);
     return NULL;
 }
 

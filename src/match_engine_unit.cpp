@@ -35,7 +35,7 @@ CMatchEngineUnit::CMatchEngineUnit(const std::string& config, const std::string&
     m_dump_path(""),
     m_blacklist(true),
     m_dict(NULL){
-    log (LOG_WARNING, "file:%s\tline:%d\ttid:%lld\t\tclass:CMatchEngineUnit\tfunc:Construct\tinfo:config=%s, dict_type=%s",
+    log (LOG_WARNING, "file:%s\tline:%d\ttid:%lld\t\tclass:CMatchEngineUnit\tfunc:Construct\tinfo:config=%s, engine=%s",
             __FILE__,
             __LINE__,
             pthread_self(),
@@ -79,7 +79,15 @@ int CMatchEngineUnit::Init() {
 
     // 3. init the dict
     m_dict = CDictFactory::GetInstance()->GenDictInstance(m_dict_type);
-    int rc = m_dict->Init(m_dict_init_params));
+    if(NULL == m_dict) {
+        log (LOG_WARNING, "%s:%d\ttid:%lld\t\tclass:CMatchEngineUnit gen dict(%s) error",
+                __FILE__,
+                __LINE__,
+                pthread_self(),
+                m_dict_type.c_str());
+        return 3;
+    }
+    int rc = m_dict->Init(m_dict_init_params);
     if(rc) {
         log (LOG_WARNING, "%s:%d\ttid:%lld\t\tclass:CMatchEngineUnit\tdict init error(%d)",
                 __FILE__,
@@ -87,8 +95,15 @@ int CMatchEngineUnit::Init() {
                 pthread_self(),
                 rc);
 
-        retturn 3;
+        return 4;
     }
+    log (LOG_INFO, "%s:%d\ttid:%lld\t\tclass:CMatchEngineUnit\tdict init %s(%s) success",
+            __FILE__,
+            __LINE__,
+            pthread_self(),
+            m_dict_type.c_str(),
+            m_dict_init_params.c_str());
+
     return 0;
 }
 
@@ -325,7 +340,7 @@ int CMatchEngineUnit::Get(const std::string& key, std::vector<std::string>* valu
             continue;
         }
         std::string ret = "{\"engine\":\"" + m_engine + "\""
-            + ",\"value\":\"" + value_str + "\""
+            + ",\"value\":" + value_str
             + ",\"blacklist\":";
 
         m_blacklist ? ret += "\"true\"}" : ret += "\"false\"}";

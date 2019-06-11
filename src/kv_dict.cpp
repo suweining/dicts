@@ -205,7 +205,6 @@ int CKvDict::Finalize() {
             pthread_self(),
             m_item_count);
 
-
     return 0;
 }
 
