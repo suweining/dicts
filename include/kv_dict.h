@@ -31,7 +31,6 @@ class CKvDict : public IDict {
             IKey*   key;
             IValue* value;
             Record() : key(NULL), value(NULL) {
-            
             }
             ~Record() {
                 if(NULL != key) {

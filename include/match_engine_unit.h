@@ -37,6 +37,7 @@ class CMatchEngineUnit {
        std::string      m_config;
        std::string      m_engine;
 
+       std::string      m_dict_init_params;
        std::string      m_dict_type;
        std::string      m_key_type;
        std::string      m_value_type;
@@ -45,9 +46,6 @@ class CMatchEngineUnit {
        bool             m_blacklist;
 
        IDict*           m_dict;  
-
-
-
 };
 
 #endif
