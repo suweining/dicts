@@ -23,10 +23,13 @@
 # Compiled Static libraries
 *.lai
 *.la
-*.a
 *.lib
 
 # Executables
 *.exe
 *.out
 *.app
+
+# bin dir
+libdicts*
+bin*
