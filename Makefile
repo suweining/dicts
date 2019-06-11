@@ -3,12 +3,18 @@ DICT_VERSION	=	v.1.0.0
 PACKAGE_NAME	=	match_engine_$(DICT_VERSION)
 
 all:
+	/usr/bin/install -c -d libdicts/lib
+	/usr/bin/install -c -d libdicts/include
 	$(MAKE) -C src
 clean:
 	$(MAKE) clean -C src
 	rm -rf packages $(PACKAGE_NAME).tgz
+	rm -rf libdicts
 
 install:
+
+	/usr/bin/install -c -d libdicts/lib
+	/usr/bin/install -c -d libdicts/include
 
 	$(MAKE) -C src
 

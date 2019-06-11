@@ -29,4 +29,7 @@
 *.exe
 *.out
 *.app
-./libdicts
+
+# bin dir
+libdicts*
+bin*
