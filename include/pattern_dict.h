@@ -20,16 +20,17 @@ class CPatternDict : public IDict {
         CPatternDict();
         ~CPatternDict();
 
-        int Init(const std::string& params);
-        int Set(const IKey& key, const IValue& value);
-        int Add(const IKey& key, const IValue& value);
-        int Del(const IKey& key);
-        int Get(const IKey& key, std::vector<IValue*>* value);
-        int Dump(const std::string& dict_data_dump_path);
-        int Finalize();
+        int Init(const std::string& params); // init dict
+        int Set(const std::shared_ptr<IKey> key, const std::shared_ptr<IValue> value); // use for update value while dict has build
+        int Add(const std::shared_ptr<IKey> key, const std::shared_ptr<IValue> value); // add record for building the dict
+        int Del(const std::shared_ptr<IKey> key); // del record info in the dict
+        int Get(const std::shared_ptr<IKey> key, std::vector<std::shared_ptr<IValue> >* value); // match key
+        int Dump(const std::string& dict_data_dump_path); // write the record into file
+        int Finalize(); // building the dict while all record add into mem
+        int Capacity(size_t capacity); // init dict
+        int Info(std::string* info); // info for dict
 
-        int Info(std::string* info);
-        int Clear();
+        int Clear(); // clear dict 
 
     private:
         int Separation();
@@ -66,10 +67,10 @@ class CPatternDict : public IDict {
         };
 
         typedef struct Node1{
-            IKey*       key;
-            IValue*     value;
+            std::shared_ptr<IKey>       key;
+            std::shared_ptr<IValue>     value;
 
-            Node1(IKey* k, IValue* v) : key(k), value(v) {}
+            Node1() : key(NULL), value(NULL) {}
             ~Node1() {
 
             }
@@ -124,6 +125,7 @@ class CPatternDict : public IDict {
         std::string                         m_key_class;
         std::string                         m_value_class;
 
+        size_t                              m_capacity;
         // reading
         std::vector<DictInfoMeta>           m_dict_info_read;
         std::vector<PrefixInfoMeta>         m_prefix_info_read;

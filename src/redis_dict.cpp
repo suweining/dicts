@@ -85,11 +85,7 @@ int CRedisDict::Init(const std::string& params){
     return 0;
 }
 
-int CRedisDict::Add(const IKey& key, const IValue& value){
-    return Set(key, value);
-}
-
-int CRedisDict::Set(const IKey& key, const IValue& value){
+int CRedisDict::Set(const std::shared_ptr<IKey> key, const std::shared_ptr<IValue> value) { // use for update value while dict has build
     std::string key_str = "";
     std::string value_str = "";
 
@@ -98,7 +94,7 @@ int CRedisDict::Set(const IKey& key, const IValue& value){
         return 1;
     }
     // 2. get key_str or value_str
-    if(key.GetKey(&key_str)) {
+    if(key->GetKey(&key_str)) {
         log (LOG_INFO, "%s:%d\ttid:%lld\t\tclass:CRedisDict\tfunc:Add\tinfo:GetKey fail",
                 __FILE__,
                 __LINE__,
@@ -107,7 +103,7 @@ int CRedisDict::Set(const IKey& key, const IValue& value){
         return 2;
     }
 
-    if(value.GetVal(&value_str)) {
+    if(value->GetVal(&value_str)) {
         log (LOG_INFO, "%s:%d\ttid:%lld\t\tclass:CRedisDict\tfunc:Add\tinfo:GetVal fail",
                 __FILE__,
                 __LINE__,
@@ -130,14 +126,19 @@ int CRedisDict::Set(const IKey& key, const IValue& value){
     return 0;
 }
 
-int CRedisDict::Del(const IKey& key){
+int CRedisDict::Add(const std::shared_ptr<IKey> key, const std::shared_ptr<IValue> value) { // add record for building the dict
+    return Set(key, value);
+}
+
+
+int CRedisDict::Del(const std::shared_ptr<IKey> key) { // del record info in the dict
     std::string key_str = "";
    // 1. check redis connect status
     if(NULL == m_redis_client) {
         return 1;
     }
     // 2. get key_str
-    if(key.GetKey(&key_str)) {
+    if(key->GetKey(&key_str)) {
         log (LOG_INFO, "%s:%d\ttid:%lld\t\tclass:CRedisDict GetKey fail",
                 __FILE__,
                 __LINE__,
@@ -158,14 +159,14 @@ int CRedisDict::Del(const IKey& key){
     return 0;
 }
 
-int CRedisDict::Get(const IKey& key, std::vector<IValue*>* value){
+int CRedisDict::Get(const std::shared_ptr<IKey> key, std::vector<std::shared_ptr<IValue> >* value) { // match key
     std::string key_str;
    // 1. check redis connect status
     if(NULL == m_redis_client) {
         return 1;
     }
     // 2. get key_str 
-    if(key.GetKey(&key_str)) {
+    if(key->GetKey(&key_str)) {
         log (LOG_INFO, "%s:%d\ttid:%lld\t\tclass:CRedisDict GetKey fail",
                 __FILE__,
                 __LINE__,
@@ -183,7 +184,7 @@ int CRedisDict::Get(const IKey& key, std::vector<IValue*>* value){
                 pthread_self(),
                 key_str.c_str());
     }
-    IValue* candidate_value = new CRedisCommonValue();
+    std::shared_ptr<IValue> candidate_value(new CRedisCommonValue());
     if(candidate_value->SetVal(&value_str)) {
         log (LOG_WARNING, "%s:%d\ttid:%lld\t\tclass:CRedisDict SetVal(%s) fail",
                 __FILE__,

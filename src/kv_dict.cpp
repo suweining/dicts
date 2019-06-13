@@ -16,21 +16,21 @@ int CKvDict::Init(const std::string& params) {
     return 0;
 }
 
-int CKvDict::Set(const IKey& key, const IValue& value) {
+int CKvDict::Set(const std::shared_ptr<IKey> key, const std::shared_ptr<IValue> value) {  // use for update value while dict has build
     std::string key_str;
-    if(key.GetKey(&key_str)) {
+    if(key->GetKey(&key_str)) {
         return 1;
     }
 
     VALUE_TYPE val;
     if(m_hash_dict_engine.GetItem(key_str.c_str(), val)) {
-        m_record_repo[val]->value = const_cast<IValue*>(&value);
+        m_record_repo[val].value = value;
     }
     else{
-        Record* record = new Record();
+        Record record;
 
-        record->key      = const_cast<IKey*>(&key);
-        record->value    = const_cast<IValue*>(&value);
+        record.key      = key;
+        record.value    = value;
 
 
         m_record_repo.push_back(record);
@@ -43,10 +43,9 @@ int CKvDict::Set(const IKey& key, const IValue& value) {
     return 0;
 }
 
-
-int CKvDict::Add(const IKey& key, const IValue& value) {
+int CKvDict::Add(const std::shared_ptr<IKey> key, const std::shared_ptr<IValue> value) { // add record for building the dict
     std::string key_str;
-    if(key.GetKey(&key_str)) {
+    if(key->GetKey(&key_str)) {
         log (LOG_INFO, "file:%s\tline:%d\ttid:%lld\t\tclass:CKvDict\tfunc:Add\tinfo:GetKey fail",
                 __FILE__,
                 __LINE__,
@@ -72,13 +71,16 @@ int CKvDict::Add(const IKey& key, const IValue& value) {
         return 2;
     }
 
-    Record* record = new Record();
+    Record record;
 
-    record->key      = const_cast<IKey*>(&key);
-    record->value    = const_cast<IValue*>(&value);
+    record.key      = key;
+    record.value    = value;
 
     m_record_repo.push_back(record);
     val = m_record_repo.size() - 1;
+    m_hash_dict_engine.AddItem(key_str, val);
+
+    ++ m_item_count;
 
     log (LOG_DEBUG, "file:%s\tline:%d\ttid:%lld\t\tclass:CKvDict\tfunc:Add\tinfo:add key success. key=%s, value=%d",
             __FILE__,
@@ -87,17 +89,14 @@ int CKvDict::Add(const IKey& key, const IValue& value) {
             key_str.c_str(),
             val);
 
-    m_hash_dict_engine.AddItem(key_str, val);
-
-    ++ m_item_count;
     return 0;
 }
 
-int CKvDict::Del(const IKey& key) {
+int CKvDict::Del(const std::shared_ptr<IKey> key) { // del record info in the dict
     std::string key_str;
     VALUE_TYPE val;
 
-    if(key.GetKey(&key_str)) {
+    if(key->GetKey(&key_str)) {
         return 1;
     }
 
@@ -114,7 +113,7 @@ int CKvDict::Del(const IKey& key) {
 }
 
 
-int CKvDict::Get(const IKey& key, std::vector<IValue*>* value) {
+int CKvDict::Get(const std::shared_ptr<IKey> key, std::vector<std::shared_ptr<IValue> >* value) { // match key
     std::string key_str;
     VALUE_TYPE val;
     log (LOG_INFO, "file:%s\tline:%d\ttid:%lld\t\tclass:CKvDict\tfunc:Get\tinfo:begin",
@@ -122,7 +121,14 @@ int CKvDict::Get(const IKey& key, std::vector<IValue*>* value) {
             __LINE__,
             pthread_self());
 
-    if(key.GetKey(&key_str)) {
+    if(key->GetKey(&key_str)) {
+
+        log (LOG_DEBUG, "file:%s\tline:%d\ttid:%lld\t\tclass:CKvDict\tfunc:Get\tmiss key",
+                __FILE__,
+                __LINE__,
+                pthread_self(),
+                key_str.c_str());
+
         return 1;
     }
 
@@ -151,7 +157,7 @@ int CKvDict::Get(const IKey& key, std::vector<IValue*>* value) {
             continue;
         }
 
-        value->push_back(m_record_repo[val]->value);
+        value->push_back(m_record_repo[val].value);
     }
 
     return 0;
@@ -179,8 +185,8 @@ int CKvDict::Dump(const std::string& dict_data_dump_path) {
 
     FOR_EACH(record_repo_itr, m_record_repo) {
         std::string key_str, value_str;
-        if((*record_repo_itr)->key->ToString(&key_str)
-                || (*record_repo_itr)->value->ToString(&value_str)) {
+        if(record_repo_itr->key->ToString(&key_str)
+                || record_repo_itr->value->ToString(&value_str)) {
 
             log (LOG_INFO, "file:%s\tline:%d\ttid:%lld\tCKvDict::Dump failed to ToString",
                     __FILE__,
@@ -208,6 +214,13 @@ int CKvDict::Finalize() {
     return 0;
 }
 
+int CKvDict::Capacity(size_t capacity) { // init dict
+    if(capacity > m_capacity) {
+        m_capacity = capacity;
+        m_record_repo.resize(m_capacity);
+    }
+    return 0;
+}
 int CKvDict::Info(std::string* info) {
 
     std::ostringstream oss;
@@ -219,5 +232,7 @@ int CKvDict::Info(std::string* info) {
 }
 
 int CKvDict::Clear() {
+    // m_hash_dict_engine clear
+    // m_record_repo clear
     return 0;
 }

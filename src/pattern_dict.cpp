@@ -9,7 +9,7 @@
 #include "util.h"
 #include "log.h"
 
-CPatternDict::CPatternDict() {
+CPatternDict::CPatternDict() : m_capacity(10), m_darts_datrie_read(NULL), m_darts_datrie_write(NULL) {
 
     m_darts_datrie_read     = new DartsDatrie();
     m_darts_datrie_write    = new DartsDatrie();
@@ -31,10 +31,10 @@ int CPatternDict::Init(const std::string& params) {
     return 0;
 }
 
-int CPatternDict::Set(const IKey& key, const IValue& value) {
+int CPatternDict::Set(const std::shared_ptr<IKey> key, const std::shared_ptr<IValue> value) { // use for update value while dict has build
     std::string re_string;
     int rc;
-    if((rc = key.GetKey(&re_string)) && rc != 0) {
+    if((rc = key->GetKey(&re_string)) && rc != 0) {
         log (LOG_ERROR, "file:%s\tline:%d\ttid:%lld\t\tclass:CPatternDict\tfunc:Set\tinfo:GetKey, rc:%d", __FILE__, __LINE__, pthread_self(), rc);
         return 1;
     }
@@ -47,7 +47,7 @@ int CPatternDict::Set(const IKey& key, const IValue& value) {
     // check in m_dict_info or not
     auto key_itr =  m_dict_info_write.end();
     FOR_EACH(itr, m_dict_info_write) {
-        if(*itr == key) {
+        if(*itr == *key.get()) {
             key_itr = itr; 
             break;
         }
@@ -57,14 +57,17 @@ int CPatternDict::Set(const IKey& key, const IValue& value) {
     if(m_dict_info_write.end() != key_itr) {
         m_dict_info_write.erase(key_itr);
     }
-    m_dict_info_write.push_back(DictInfoMeta(const_cast<IKey*>(&key), const_cast<IValue*>(&value)));
+    DictInfoMeta dim;
+    dim.key = key;
+    dim.value = value;
+    m_dict_info_write.push_back(dim);
     return 0;
 }
 
-int CPatternDict::Add(const IKey& key, const IValue& value) {
+int CPatternDict::Add(const std::shared_ptr<IKey> key, const std::shared_ptr<IValue> value) { // add record for building the dict
     std::string re_string;
     int rc;
-    if((rc = key.GetKey(&re_string)) && rc != 0) {
+    if((rc = key->GetKey(&re_string)) && rc != 0) {
         log (LOG_ERROR, "file:%s\tline:%d\ttid:%lld\t\tclass:CPatternDict\tfunc:Add\tinfo:GetKey,rc:%d",
                 __FILE__,
                 __LINE__,
@@ -74,7 +77,7 @@ int CPatternDict::Add(const IKey& key, const IValue& value) {
     }
 
     std::string value_str;
-    if((rc = value.GetVal(&value_str)) && rc != 0) {
+    if((rc = value->GetVal(&value_str)) && rc != 0) {
         log (LOG_ERROR, "file:%s\tline:%d\ttid:%lld\t\tclass:CPatternDict\tfunc:Add\tinfo:GetVal,rc:%d",
                 __FILE__,
                 __LINE__,
@@ -104,7 +107,7 @@ int CPatternDict::Add(const IKey& key, const IValue& value) {
     // check in m_dict_info or not
     auto key_itr = m_dict_info_write.end();
     FOR_EACH(itr, m_dict_info_write) {
-        if(*itr == key) {
+        if(*itr == *key.get()) {
             key_itr = itr; 
 
             log (LOG_WARNING, "file:%s\tline:%d\ttid:%lld\tclass:CPatternDict\tfunc:Add\tinfo:record existed",
@@ -115,16 +118,20 @@ int CPatternDict::Add(const IKey& key, const IValue& value) {
         }
     }
 
-    m_dict_info_write.push_back(DictInfoMeta(const_cast<IKey*>(&key), const_cast<IValue*>(&value)));
+    DictInfoMeta dim;
+    dim.key = key;
+    dim.value = value;
+
+    m_dict_info_write.push_back(dim);
 
     return 0;
 }
 
-int CPatternDict::Del(const IKey& key) {
+int CPatternDict::Del(const std::shared_ptr<IKey> key) { // del record info in the dict
     // check in m_dict_info_write or not
     auto key_itr =  m_dict_info_write.end();
     FOR_EACH(itr, m_dict_info_write) {
-        if(*itr == key) {
+        if(*itr == *key.get()) {
             key_itr = itr; 
         }
     }
@@ -133,16 +140,16 @@ int CPatternDict::Del(const IKey& key) {
         m_dict_info_write.erase(key_itr);
     }
     else{
-        return 1; 
+        return 1;
     }
     return 0;
 }
 
-int CPatternDict::Get(const IKey& key, std::vector<IValue*>* value) {
+int CPatternDict::Get(const std::shared_ptr<IKey> key, std::vector<std::shared_ptr<IValue> >* value) { // match key
     std::vector<DartsDatrie::result_pair_type> results;
     size_t result_size = 0;
     std::string keyword;
-    key.GetKey(&keyword);
+    key->GetKey(&keyword);
 
     log(LOG_DEBUG, "%s:%d\ttid:%lld\tclass:CPatternDict::Get key[%s]",
             __FILE__,
@@ -358,6 +365,14 @@ int CPatternDict::Finalize() {
     return 0;
 }
 
+int CPatternDict::Capacity(size_t capacity) { // init dict
+    if(m_capacity < capacity) {
+        m_capacity = capacity; 
+        m_dict_info_write.resize(m_capacity);
+        m_prefix_info_write.resize(m_capacity);
+    }
+    return 0;
+}
 int CPatternDict::Info(std::string* info) {
 
     *info = "pattern dict";
