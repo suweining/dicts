@@ -206,6 +206,11 @@ int CRedisDict::Finalize(){
     return 0;
 }
 
+int CRedisDict::Capacity(size_t capacity){
+    return 0;
+}
+
+
 int CRedisDict::Info(std::string* info){
     return 0;
 }
