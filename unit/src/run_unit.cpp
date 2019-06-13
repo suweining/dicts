@@ -1,6 +1,7 @@
 #include "gtest/gtest.h"
+#include "run_unit_list.hpp"
 
-TEST(Test, Begine) {
+TEST(Test, End) {
     ASSERT_TRUE(true);
 }
 
