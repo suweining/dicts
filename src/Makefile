@@ -44,12 +44,16 @@ LIBS		=	\
 LDFLAGS		= 	$(LIBS) -lre2 -lhiredis -lredis_client -Wl,-rpath=../lib -Wl,-rpath=./lib -Wl,-rpath=../lib
 
 OBJS1		= 	dict_factory.o key_factory.o value_factory.o \
-			match_engine_singleton.o match_engine_level.o match_engine_unit.o \
-			pattern_dict.o kv_dict.o redis_dict.o \
-			spider_filter_pattern_key.o spider_filter_pattern_value.o \
-			spider_filter_kv_key.o spider_filter_kv_value.o \
-			redis_common_key.o redis_common_value.o \
+			match_engine_singleton.o match_engine_level.o \
 			ini.o  util.o log.o mmap_reader.o \
+			$(KV_DICT_OBJ) \
+			$(REDIS_DICT_OBJ) \
+			$(PATTER_DICT_OBJ) \
+
+
+KV_DICT_OBJ	=	kv_dict.o spider_filter_kv_key.o spider_filter_kv_value.o
+PATTER_DICT_OBJ	=	pattern_dict.o	spider_filter_pattern_key.o spider_filter_pattern_value.o
+REDIS_DICT_OBJ	=	redis_dict.o redis_common_key.o redis_common_value.o
 
 TARGET1		= 	../libdicts/lib/libdicts.a
 
@@ -71,7 +75,7 @@ TEST_EXE4	=	unit/dict_handler_unit
 
 
 #ALL_TEST	=	$(TEST_EXE1)  $(TEST_EXE2) $(TEST_EXE4)
-ALL_TARGETS	= 	$(TARGET1) $(TARGET2)
+ALL_TARGETS	= 	$(TARGET1) #$(TARGET2)
 
 all: $(ALL_TARGETS)
 
@@ -83,7 +87,7 @@ all: $(ALL_TARGETS)
 $(TARGET1): $(OBJS1)
 	ar cr $(TARGET1) $(OBJS1)
 	cp ../include/dict.h ../include/key.h ../include/value.h ../include/singleton.h \
-	    ../include/match_engine_singleton.h ../include/match_engine_level.h  ../include/match_engine_unit.h \
+	    ../include/match_engine_singleton.h ../include/match_engine_level.h  \
 	    ../include/util.h  \
 	    ../libdicts/include/
 
