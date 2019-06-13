@@ -44,7 +44,7 @@ LIBS		=	\
 LDFLAGS		= 	$(LIBS) -lre2 -lhiredis -lredis_client -Wl,-rpath=../lib -Wl,-rpath=./lib -Wl,-rpath=../lib
 
 OBJS1		= 	dict_factory.o key_factory.o value_factory.o \
-			match_engine_singleton.o match_engine_level.o \
+			match_engine_singleton.o match_engine_level.o match_engine_unit.o \
 			ini.o  util.o log.o mmap_reader.o \
 			$(KV_DICT_OBJ) \
 			$(REDIS_DICT_OBJ) \
@@ -87,7 +87,7 @@ all: $(ALL_TARGETS)
 $(TARGET1): $(OBJS1)
 	ar cr $(TARGET1) $(OBJS1)
 	cp ../include/dict.h ../include/key.h ../include/value.h ../include/singleton.h \
-	    ../include/match_engine_singleton.h ../include/match_engine_level.h  \
+	    ../include/match_engine_singleton.h ../include/match_engine_level.h  ../include/match_engine_unit.h \
 	    ../include/util.h  \
 	    ../libdicts/include/
 
