@@ -174,7 +174,7 @@ int CMatchEngineUnit::Reload(const std::string& load_path){
                 line.c_str());
 
         // 4. add to dict
-        if(NULL == m_dict || m_dict->Add(*key_ptr, *value_ptr)) {
+        if(NULL == m_dict || m_dict->Add(std::shared_ptr<IKey>(key_ptr), std::shared_ptr<IValue>(value_ptr))) {
             log(LOG_INFO, "%s:%d\ttid:%lld\tCMatchEngineUnit::ReLoad fail to add:%s",
                     __FILE__,
                     __LINE__,
@@ -234,7 +234,7 @@ int CMatchEngineUnit::Set(const std::string& key, const std::string& value){
         return 1;
     }
 
-    if(NULL == m_dict || m_dict->Set(*key_ptr, *value_ptr)) {
+    if(NULL == m_dict || m_dict->Set(std::shared_ptr<IKey>(key_ptr), std::shared_ptr<IValue>(value_ptr))) {
         return 2;
     }
 
@@ -250,7 +250,7 @@ int CMatchEngineUnit::Add(const std::string& key, const std::string& value){
         return 1;
     }
 
-    if(NULL == m_dict || m_dict->Add(*key_ptr, *value_ptr)) {
+    if(NULL == m_dict || m_dict->Add(std::shared_ptr<IKey>(key_ptr), std::shared_ptr<IValue>(value_ptr))) {
         return 2;
     }
 
@@ -259,11 +259,11 @@ int CMatchEngineUnit::Add(const std::string& key, const std::string& value){
 
 int CMatchEngineUnit::Del(const std::string& key){
     IKey* key_ptr = CKeyFactory::GetInstance()->GenKeyInstance(m_key_type);
-    if(key_ptr->SetKey(&key)) {
+    if(key_ptr->SetKey(key_ptr)) {
         return 1;
     }
 
-    if(NULL == m_dict || m_dict->Del(*key_ptr)) {
+    if(NULL == m_dict || m_dict->Del(std::shared_ptr<IKey>(key_ptr))) {
         return 2;
     }
     return 0;
@@ -316,7 +316,7 @@ int CMatchEngineUnit::Get(const std::string& key, std::vector<std::string>* valu
         return -3;
     }
 
-    std::vector<IValue*> hit_value_vec;
+    std::vector<std::shared_ptr<IValue> > hit_value_vec;
     if(NULL == m_dict ) {
         log (LOG_DEBUG, "file:%s\tline:%d\ttid:%lld\t\tclass:CMatchEngineUnit::Get key and key=%s",
                 __FILE__,
@@ -326,7 +326,7 @@ int CMatchEngineUnit::Get(const std::string& key, std::vector<std::string>* valu
         return -4;
     }
 
-    int rc = m_dict->Get(*key_ptr, &hit_value_vec);
+    int rc = m_dict->Get(std::shared_ptr<IKey>(key_ptr), &hit_value_vec);
     log (LOG_DEBUG, "%s:%d\ttid:%lld\t\tclass:CMatchEngineUnit::Get(%s, &val) ret:%d",
             __FILE__,
             __LINE__,
