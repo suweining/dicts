@@ -34,10 +34,7 @@ int CRedisCommonValue::Init(const void* input) {
          return 2;
     }
 
-    // 3. get m_value
-    m_value = m_fields[1];
-
-    // 4. get m_string
+    // 3. get m_string
     m_string = "";
     size_t fields_len = m_fields.size();
     for(size_t i = 1; i < fields_len - 1; ++i) {
@@ -46,6 +43,8 @@ int CRedisCommonValue::Init(const void* input) {
 
     m_string += m_fields[fields_len - 1];
 
+    // 4. set value
+    m_value = m_string;
     log(LOG_DEBUG, "%s:%d\ttid:%lld\tclass:CRedisCommonValue\tfunction:Init\tinfo:success init val=%s",
             __FILE__,
             __LINE__,

@@ -23,7 +23,7 @@ int CRedisDict::Init(const std::string& params){
 
     // 1. get host, port from params
     const std::vector<std::string>& param_vec = StringToTokens(params, false, ':', false);
-    if(param_vec.size() < 0) {
+    if(param_vec.size() < 2) {
         log (LOG_INFO, "%s:%d\ttid:%lld\t\tclass:CRedisDict params[%s] is error",
                 __FILE__,
                 __LINE__,
@@ -37,7 +37,7 @@ int CRedisDict::Init(const std::string& params){
     std::string pwd = "";
 
     if(param_vec.size() >= 3) {
-        pwd = param_vec[3];
+        pwd = param_vec[2];
     }
 
     log (LOG_DEBUG, "%s:%d\ttid:%lld\t\tclass:CRedisDict params host:%s, port:%d, pwd:%s",
@@ -49,9 +49,7 @@ int CRedisDict::Init(const std::string& params){
             pwd.c_str());
 
     // 2. connect to redis/pika
-    m_redis_client = new RedisClient(host, port);
-    // 3. ping redis/pika
-
+    m_redis_client = new RedisClient(host, port, pwd);
     if(NULL == m_redis_client) {
         log (LOG_WARNING, "%s:%d\ttid:%lld\t\tclass:CRedisDict init failed host:%s, port:%d, pwd:%s",
                 __FILE__,
@@ -62,6 +60,11 @@ int CRedisDict::Init(const std::string& params){
                 pwd.c_str());
         return 2;
     }
+
+    m_redis_client->SetConnectionTimeout(60 * 1000);
+    m_redis_client->SetOperationTimeout(50);
+    // 3. ping redis/pika
+
 
     if(!m_redis_client->Connect()) {
          log (LOG_WARNING, "%s:%d\ttid:%lld\t\tclass:CRedisDict connect failed host:%s, port:%d, pwd:%s",
@@ -111,6 +114,13 @@ int CRedisDict::Set(const std::shared_ptr<IKey> key, const std::shared_ptr<IValu
 
         return 3;
     }
+    log (LOG_DEBUG, "%s:%d\ttid:%lld\t\tclass:CRedisDict\t add redis(%s, %s) begin",
+            __FILE__,
+            __LINE__,
+            pthread_self(),
+            key_str.c_str(),
+            value_str.c_str());
+
 
     // 3. add into redis
     if(!m_redis_client->Set(key_str, value_str)) {

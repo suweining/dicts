@@ -194,13 +194,16 @@ int CMatchEngineLevel::Dump(const std::string& engine){
 
 int CMatchEngineLevel::Set(const std::string& engine, const std::string& key, const std::string& value){
     CMatchEngineUnit* match_engine_unit_ptr = m_engine_pool[engine];
+    if(NULL == match_engine_unit_ptr) {
+        return 1;
+    }
     if(match_engine_unit_ptr->Set(key, value)) {
         log (LOG_WARNING, "file:%s\tline:%d\ttid:%lld\t\tclass:CMatchEngineLevel\tfunc:ReadConfig\tinfo:set engine %s failed",
                 __FILE__,
                 __LINE__,
                 engine.c_str());
 
-        return 1;
+        return 2;
     }
     return 0;
 
@@ -236,6 +239,7 @@ int CMatchEngineLevel::Del(const std::string& engine, const std::string& key){
 /*
  *
  * ret < 0 : error
+ *      ret = -10 error: engine null
  * ret = 0 : miss
  * ret = 1 : hit blacklist
  * ret = 2 : hit whitelist
@@ -244,6 +248,9 @@ int CMatchEngineLevel::Del(const std::string& engine, const std::string& key){
 int CMatchEngineLevel::GetEngine(const std::string& engine, const std::string& key, std::vector<std::string>* value){
 
     CMatchEngineUnit* match_engine_unit_ptr = m_engine_pool[engine];
+    if(NULL == match_engine_unit_ptr) {
+        return -11;
+    }
     return match_engine_unit_ptr->Get(key, value);
 }
 /*
