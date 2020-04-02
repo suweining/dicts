@@ -51,21 +51,16 @@ int CRedisDict::Init(const std::string& params){
     // 2. connect to redis/pika
     m_redis_client = new RedisClient(host, port, pwd);
     if(NULL == m_redis_client) {
-        log (LOG_WARNING, "%s:%d\ttid:%lld\t\tclass:CRedisDict init failed host:%s, port:%d, pwd:%s",
+        log (LOG_WARNING, "%s:%d\ttid:%lld\t\tclass:CRedisDict init failed host:%s, port:%d",
                 __FILE__,
                 __LINE__,
                 pthread_self(),
                 host.c_str(),
-                port,
-                pwd.c_str());
+                port);
         return 2;
     }
 
-    m_redis_client->SetConnectionTimeout(60 * 1000);
-    m_redis_client->SetOperationTimeout(50);
     // 3. ping redis/pika
-
-
     if(!m_redis_client->Connect()) {
          log (LOG_WARNING, "%s:%d\ttid:%lld\t\tclass:CRedisDict connect failed host:%s, port:%d, pwd:%s",
                 __FILE__,
@@ -76,6 +71,10 @@ int CRedisDict::Init(const std::string& params){
                 pwd.c_str());
         return 3;
     }
+    // set timeout
+    //m_redis_client->SetConnectionTimeout(60 * 1000);
+    //m_redis_client->SetOperationTimeout(50);
+
     log (LOG_INFO, "%s:%d\ttid:%lld\t\tclass:CRedisDict init success host:%s, port:%d, pwd:%s",
             __FILE__,
             __LINE__,

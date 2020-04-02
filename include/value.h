@@ -9,6 +9,6 @@ class IValue {
         virtual int ToString(void* output) const = 0;
         virtual int Compare(const IValue& v) const = 0;
         virtual int Func(const void* input, void* output) = 0;
-        ~IValue() {}
+        virtual ~IValue() {}
 };
 #endif

@@ -42,7 +42,7 @@ install:
 	/usr/bin/install -c -d packages/lib_$(PACKAGE_NAME)/include
 	/usr/bin/install -c -d packages/lib_$(PACKAGE_NAME)/lib
 
-	cp bin/*.a bin/*.so packages/lib_$(PACKAGE_NAME)/lib
+	cp  bin/*.so packages/lib_$(PACKAGE_NAME)/lib
 	cp include/*.h packages/lib_$(PACKAGE_NAME)/include
 
 package: clean all install

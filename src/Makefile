@@ -51,7 +51,7 @@ OBJS1		= 	dict_factory.o key_factory.o value_factory.o \
 			$(PATTER_DICT_OBJ) \
 
 
-KV_DICT_OBJ	=	kv_dict.o spider_filter_kv_key.o spider_filter_kv_value.o
+KV_DICT_OBJ	=	kv_dict.o spider_filter_kv_key.o spider_filter_kv_value.o kv_dict_common_key.o kv_dict_common_value.o
 PATTER_DICT_OBJ	=	pattern_dict.o	spider_filter_pattern_key.o spider_filter_pattern_value.o
 REDIS_DICT_OBJ	=	redis_dict.o redis_common_key.o redis_common_value.o
 
